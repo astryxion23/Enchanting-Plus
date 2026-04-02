@@ -7,13 +7,13 @@ import net.minecraft.resources.ResourceLocation;
 public class TileEntityDecorationRenderer extends TileEntityBookRenderer<TileEntityDecoration> {
 
     private static final ResourceLocation[] TEXTURES = new ResourceLocation[] {
-            ResourceLocation.fromNamespaceAndPath("eplus", "textures/entity/enchantingplus_book.png"),
-            ResourceLocation.fromNamespaceAndPath("minecraft", "textures/entity/enchanting_table_book.png"),
-            ResourceLocation.fromNamespaceAndPath("eplus", "textures/entity/prismarine_book.png"),
-            ResourceLocation.fromNamespaceAndPath("eplus", "textures/entity/nether_book.png"),
-            ResourceLocation.fromNamespaceAndPath("eplus", "textures/entity/tartarite_book.png"),
-            ResourceLocation.fromNamespaceAndPath("eplus", "textures/entity/white_book.png"),
-            ResourceLocation.fromNamespaceAndPath("eplus", "textures/entity/metal_book.png")
+            new ResourceLocation("eplus", "textures/entity/enchantingplus_book.png"),
+            new ResourceLocation("minecraft", "textures/entity/enchanting_table_book.png"),
+            new ResourceLocation("eplus", "textures/entity/prismarine_book.png"),
+            new ResourceLocation("eplus", "textures/entity/nether_book.png"),
+            new ResourceLocation("eplus", "textures/entity/tartarite_book.png"),
+            new ResourceLocation("eplus", "textures/entity/white_book.png"),
+            new ResourceLocation("eplus", "textures/entity/metal_book.png")
     };
 
     public TileEntityDecorationRenderer(BlockEntityRendererProvider.Context context) {

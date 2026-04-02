@@ -9,15 +9,12 @@ import java.util.Map.Entry;
 import net.darkhax.eplus.EnchLogic;
 import net.darkhax.eplus.inventory.ItemStackHandlerEnchant;
 import net.darkhax.eplus.util.EnchantmentUtils;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Holder;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.item.enchantment.ItemEnchantments;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 public class EnchantmentLogicController {
 
@@ -46,10 +43,7 @@ public class EnchantmentLogicController {
 
     public void onItemUpdated() {
         this.inputStack = this.inventory.getEnchantingStack();
-        ItemEnchantments current = EnchantmentHelper.getEnchantmentsForCrafting(this.inputStack);
-        this.initialEnchantments = new HashMap<>();
-        for (Holder<Enchantment> h : current.keySet())
-            this.initialEnchantments.put(h.value(), current.getLevel(h));
+        this.initialEnchantments = new HashMap<>(EnchantmentHelper.getEnchantments(this.inputStack));
         this.itemEnchantments = new HashMap<>(this.initialEnchantments);
         this.validEnchantments = EnchLogic.getValidEnchantments(this.inputStack, this.world, this.pos);
         this.calculateState();
@@ -62,13 +56,13 @@ public class EnchantmentLogicController {
             int original = this.initialEnchantments.getOrDefault(newEntry.getKey(), 0);
             int newLevels = newEntry.getValue() - original;
             if (newLevels > 0)
-                this.cost += EnchLogic.calculateNewEnchCost(this.world.registryAccess(), newEntry.getKey(), newLevels);
+                this.cost += EnchLogic.calculateNewEnchCost(newEntry.getKey(), newLevels);
         }
         for (Entry<Enchantment, Integer> existingEnch : this.initialEnchantments.entrySet()) {
-            if (isCurse(existingEnch.getKey()) && existingEnch.getValue() > 0) {
+            if (existingEnch.getKey().isCurse() && existingEnch.getValue() > 0) {
                 int currentCurseLevel = this.itemEnchantments.getOrDefault(existingEnch.getKey(), 0);
                 if (currentCurseLevel < existingEnch.getValue())
-                    this.cost += EnchLogic.calculateNewEnchCost(this.world.registryAccess(), existingEnch.getKey(), existingEnch.getValue() - currentCurseLevel);
+                    this.cost += EnchLogic.calculateNewEnchCost(existingEnch.getKey(), existingEnch.getValue() - currentCurseLevel);
             }
         }
         if (this.enchantmentPower > 0)
@@ -94,25 +88,12 @@ public class EnchantmentLogicController {
         if (!this.player.isCreative() && EnchLogic.getExperience(this.player) < this.getCost()) return;
         if (!this.player.isCreative() && this.cost > 0)
             EnchLogic.removeExperience(this.player, this.getCost());
-        ItemEnchantments.Mutable mutable = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
+        EnchantmentHelper.setEnchantments(new HashMap<>(), this.inputStack);
         for (Entry<Enchantment, Integer> entry : this.itemEnchantments.entrySet()) {
-            if (entry.getValue() > 0) {
-                var reg = this.world.registryAccess().registryOrThrow(Registries.ENCHANTMENT);
-                Holder<Enchantment> h = reg.getHolderOrThrow(
-                        reg.getResourceKey(entry.getKey()).orElseThrow());
-                mutable.set(h, entry.getValue());
-            }
+            if (entry.getValue() > 0)
+                this.inputStack.enchant(entry.getKey(), entry.getValue());
         }
-        EnchantmentHelper.setEnchantments(this.inputStack, mutable.toImmutable());
         this.onItemUpdated();
-    }
-
-    private boolean isCurse(Enchantment enchantment) {
-        var reg = this.world.registryAccess().registryOrThrow(Registries.ENCHANTMENT);
-        return reg.getResourceKey(enchantment)
-                .flatMap(reg::getHolder)
-                .filter(h -> h.is(net.minecraft.tags.EnchantmentTags.CURSE))
-                .isPresent();
     }
 
     public int getCost() { return this.cost; }

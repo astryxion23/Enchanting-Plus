@@ -1,111 +1,76 @@
 plugins {
     id 'eclipse'
-    id 'java-library'
     id 'maven-publish'
-    id 'net.neoforged.moddev' version '2.0.140'
-    id 'idea'
+    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
 }
 
-tasks.named('wrapper', Wrapper).configure {
-    distributionType = Wrapper.DistributionType.BIN
-}
+version = "${mod_version}" + (System.getenv('BUILD_NUMBER') ?: '0')
+group = mod_group
+archivesBaseName = "${mod_name}-${version_minecraft}"
 
-version = mod_version
-group = mod_group_id
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
-repositories {
-    maven { url = 'https://maven.neoforged.net/' }
-}
-
-base {
-    archivesName = "${mod_id}-${minecraft_version}"
-}
-
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
-
-neoForge {
-    version = project.neo_version
-
-    parchment {
-        mappingsVersion = project.parchment_mappings_version
-        minecraftVersion = project.parchment_minecraft_version
-    }
-
+minecraft {
+    mappings channel: 'official', version: version_minecraft
     runs {
         client {
-            client()
-            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'debug'
+            mods {
+                eplus {
+                    source sourceSets.main
+                }
+            }
         }
         server {
-            server()
-            programArgument '--nogui'
-            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
-        }
-        data {
-            data()
-            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
-        }
-        configureEach {
-            systemProperty 'forge.logging.markers', 'REGISTRIES'
-            logLevel = org.slf4j.event.Level.DEBUG
-        }
-    }
-
-    mods {
-        "${mod_id}" {
-            sourceSet(sourceSets.main)
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'debug'
+            mods {
+                eplus {
+                    source sourceSets.main
+                }
+            }
         }
     }
 }
 
-sourceSets.main.resources { srcDir 'src/generated/resources' }
+processResources {
+    inputs.property 'version', project.version
+    filesMatching(['META-INF/mods.toml']) {
+        expand 'version': project.version
+    }
+}
 
-configurations {
-    runtimeClasspath.extendsFrom localRuntime
+repositories {
+    maven { url = 'https://maven.minecraftforge.net/' }
 }
 
 dependencies {
+    minecraft "net.minecraftforge:forge:${version_minecraft}-${version_forge}"
 }
 
-var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
-    var replaceProperties = [
-        minecraft_version       : minecraft_version,
-        minecraft_version_range : minecraft_version_range,
-        neo_version             : neo_version,
-        loader_version_range    : loader_version_range,
-        mod_id                  : mod_id,
-        mod_name                : mod_name,
-        mod_license             : mod_license,
-        mod_version             : mod_version,
-    ]
-    inputs.properties replaceProperties
-    expand replaceProperties
-    from "src/main/templates"
-    into "build/generated/sources/modMetadata"
+jar {
+    manifest {
+        attributes([
+            'Specification-Title'     : 'eplus',
+            'Specification-Vendor'    : 'Darkhax',
+            'Specification-Version'   : '1',
+            'Implementation-Title'    : project.name,
+            'Implementation-Version'  : project.version,
+            'Implementation-Vendor'   : 'Darkhax'
+        ])
+    }
 }
-sourceSets.main.resources.srcDir generateModMetadata
-neoForge.ideSyncTask generateModMetadata
 
 publishing {
     publications {
-        register('mavenJava', MavenPublication) {
-            from components.java
+        mavenJava(MavenPublication) {
+            artifact jar
         }
     }
     repositories {
         maven {
             url "file://${project.projectDir}/mcmodsrepo"
         }
-    }
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
-}
-
-idea {
-    module {
-        downloadSources = true
-        downloadJavadoc = true
     }
 }

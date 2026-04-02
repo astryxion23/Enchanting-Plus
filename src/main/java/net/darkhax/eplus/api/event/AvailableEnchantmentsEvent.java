@@ -4,7 +4,7 @@ import java.util.List;
 
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.bus.api.Event;
+import net.minecraftforge.eventbus.api.Event;
 
 public class AvailableEnchantmentsEvent extends Event {
 

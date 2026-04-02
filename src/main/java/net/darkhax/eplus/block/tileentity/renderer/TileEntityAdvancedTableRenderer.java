@@ -17,7 +17,7 @@ import net.minecraft.world.item.ItemStack;
 
 public class TileEntityAdvancedTableRenderer extends TileEntityBookRenderer<TileEntityAdvancedTable> {
 
-    private static final ResourceLocation TEXTURE_BOOK = ResourceLocation.fromNamespaceAndPath("eplus", "textures/entity/enchantingplus_book.png");
+    private static final ResourceLocation TEXTURE_BOOK = new ResourceLocation("eplus", "textures/entity/enchantingplus_book.png");
 
     public TileEntityAdvancedTableRenderer(BlockEntityRendererProvider.Context context) {
         super(context);

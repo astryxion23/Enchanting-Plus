@@ -3,7 +3,7 @@ package net.darkhax.eplus.inventory;
 import net.darkhax.eplus.EnchantingPlus;
 import net.darkhax.eplus.block.tileentity.EnchantmentLogicController;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.items.SlotItemHandler;
+import net.minecraftforge.items.SlotItemHandler;
 
 public class SlotEnchant extends SlotItemHandler {
 

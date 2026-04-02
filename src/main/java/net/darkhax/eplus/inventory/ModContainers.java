@@ -7,17 +7,17 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
-import net.neoforged.neoforge.registries.DeferredHolder;
-import net.neoforged.neoforge.registries.DeferredRegister;
+import net.minecraftforge.common.extensions.IForgeMenuType;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
 
 public class ModContainers {
 
-    public static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(BuiltInRegistries.MENU, "eplus");
+    public static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(ForgeRegistries.MENU_TYPES, "eplus");
 
-    public static final DeferredHolder<MenuType<?>, MenuType<ContainerAdvancedTable>> ADVANCED_TABLE = MENUS.register("advanced_table",
-            () -> IMenuTypeExtension.create((windowId, inv, buf) -> {
+    public static final RegistryObject<MenuType<ContainerAdvancedTable>> ADVANCED_TABLE = MENUS.register("advanced_table",
+            () -> IForgeMenuType.create((windowId, inv, buf) -> {
                 BlockPos pos = buf.readBlockPos();
                 BlockEntity be = inv.player.level().getBlockEntity(pos);
                 if (be instanceof TileEntityAdvancedTable) {

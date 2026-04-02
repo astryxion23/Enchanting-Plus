@@ -22,6 +22,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraftforge.network.NetworkHooks;
 
 import javax.annotation.Nullable;
 
@@ -67,11 +68,11 @@ public class BlockAdvancedTable extends Block implements EntityBlock {
     }
 
     @Override
-    protected InteractionResult useWithoutItem(BlockState state, Level worldIn, BlockPos pos, Player playerIn, BlockHitResult hit) {
+    public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player playerIn, net.minecraft.world.InteractionHand hand, BlockHitResult hit) {
         if (!worldIn.isClientSide) {
             BlockEntity te = worldIn.getBlockEntity(pos);
             if (te instanceof TileEntityAdvancedTable)
-                ((ServerPlayer) playerIn).openMenu(new GuiHandler.AdvancedTableContainerProvider((TileEntityAdvancedTable) te, pos), buf -> buf.writeBlockPos(pos));
+                NetworkHooks.openScreen((ServerPlayer) playerIn, new GuiHandler.AdvancedTableContainerProvider((TileEntityAdvancedTable) te, pos), pos);
         }
         return InteractionResult.sidedSuccess(worldIn.isClientSide);
     }

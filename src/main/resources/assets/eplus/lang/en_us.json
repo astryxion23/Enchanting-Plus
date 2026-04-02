@@ -1,4 +1,5 @@
 {
+  "eplus.gui.xp_cost": "XP Cost: %s",
   "block.eplus.advanced_table": "Advanced Enchantment Table",
   "block.eplus.decorative_book": "Ancient Enchanter's Book",
   "item.eplus.table_upgrade": "Table Upgrade",

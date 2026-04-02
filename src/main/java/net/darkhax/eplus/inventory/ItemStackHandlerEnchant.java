@@ -3,7 +3,7 @@ package net.darkhax.eplus.inventory;
 import net.darkhax.eplus.EnchantingPlus;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.neoforged.neoforge.items.ItemStackHandler;
+import net.minecraftforge.items.ItemStackHandler;
 
 public class ItemStackHandlerEnchant extends ItemStackHandler {
 

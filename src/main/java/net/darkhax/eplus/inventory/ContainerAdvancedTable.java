@@ -11,7 +11,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.items.SlotItemHandler;
+import net.minecraftforge.items.SlotItemHandler;
 
 public class ContainerAdvancedTable extends AbstractContainerMenu {
 
@@ -61,7 +61,7 @@ public class ContainerAdvancedTable extends AbstractContainerMenu {
                 if (!slot.mayPlace(itemStack) || itemStack.isEmpty()) continue;
                 if (slot.hasItem()) {
                     ItemStack stack = slot.getItem();
-                    if (ItemStack.isSameItemSameComponents(itemStack, stack)) {
+                    if (ItemStack.isSameItemSameTags(itemStack, stack)) {
                         int maxSize = Math.min(stack.getMaxStackSize(), slot.getMaxStackSize());
                         int placeAble = maxSize - stack.getCount();
                         if (itemStack.getCount() < placeAble) placeAble = itemStack.getCount();

@@ -3,8 +3,11 @@ package net.darkhax.eplus.gui;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
+
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 
@@ -13,7 +16,7 @@ import net.darkhax.eplus.EnchantingPlus;
 import net.darkhax.eplus.api.event.InfoBoxEvent;
 import net.darkhax.eplus.block.tileentity.EnchantmentLogicController;
 import net.darkhax.eplus.inventory.ContainerAdvancedTable;
-import net.darkhax.eplus.network.payload.EnchantPayload;
+import net.darkhax.eplus.network.messages.MessageEnchant;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -28,22 +31,19 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
 import net.minecraft.util.Mth;
-import net.minecraft.core.Holder;
-import net.minecraft.core.RegistryAccess;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.item.enchantment.ItemEnchantments;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.minecraftforge.common.MinecraftForge;
 
 public class GuiAdvancedTable extends AbstractContainerScreen<ContainerAdvancedTable> {
 
-    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath("eplus", "textures/gui/enchant.png");
+    private static final ItemStack SPOOKY_BONE = new ItemStack(Items.BONE);
+    static {
+        SPOOKY_BONE.enchant(Enchantments.PROJECTILE_PROTECTION, 1);
+    }
+
+    private static final ResourceLocation TEXTURE = new ResourceLocation("eplus", "textures/gui/enchant.png");
     private static final Random RAND = new Random();
 
     private Button enchantButton;
-    private ItemStack enchantButtonIcon = ItemStack.EMPTY;
     public final List<GuiEnchantmentLabel> enchantmentListAll = new ArrayList<>();
     public final List<GuiEnchantmentLabel> enchantmentList = new ArrayList<>();
     public GuiEnchantmentLabel selected;
@@ -69,64 +69,46 @@ public class GuiAdvancedTable extends AbstractContainerScreen<ContainerAdvancedT
         super.init();
         this.isSliding = false;
         this.scrollbar = new GuiButtonScroller(this, this.leftPos + 206, this.topPos + 16, 12, 15);
-        if (EnchLogic.isWikedNight(this.logic.getWorld())) {
-            ItemStack bone = new ItemStack(Items.BONE);
-            var reg = this.logic.getWorld().registryAccess().registryOrThrow(Registries.ENCHANTMENT);
-            ResourceKey<Enchantment> key = ResourceKey.create(Registries.ENCHANTMENT, ResourceLocation.fromNamespaceAndPath("minecraft", "projectile_protection"));
-            Holder<Enchantment> h = reg.getHolderOrThrow(key);
-            ItemEnchantments.Mutable mut = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
-            mut.set(h, 1);
-            EnchantmentHelper.setEnchantments(bone, mut.toImmutable());
-            this.enchantButtonIcon = bone;
-        } else {
-            this.enchantButtonIcon = new ItemStack(Items.ENCHANTED_BOOK);
-        }
-        this.enchantButton = Button.builder(Component.empty(), btn -> {
+        ItemStack icon = EnchLogic.isWikedNight(this.logic.getWorld()) ? SPOOKY_BONE : new ItemStack(Items.ENCHANTED_BOOK);
+        this.enchantButton = new Button(this.leftPos + 35, this.topPos + 38, 26, 20, Component.empty(), btn -> {
             if (this.canClientAfford()) {
-                PacketDistributor.sendToServer(new EnchantPayload());
+                EnchantingPlus.NETWORK.sendToServer(new MessageEnchant());
                 this.logic.enchantItem();
             }
-        }).bounds(this.leftPos + 32, this.topPos + 38, 26, 20).build();
+        }, (supplier) -> net.minecraft.network.chat.Component.empty()) {
+            @Override
+            public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partial) {
+                guiGraphics.renderItem(icon, this.getX() + 5, this.getY() + 2);
+            }
+        };
         this.addRenderableWidget(this.enchantButton);
         this.addRenderableWidget(this.scrollbar);
     }
 
     /** Linear 1–5 XP cost; treasure enchantments always 4. */
-    public static int xpCost(Enchantment ench, int level, RegistryAccess registryAccess) {
-        if (EnchLogic.isTreasureOnlyEnchantment(registryAccess, ench)) {
+    public static int xpCost(Enchantment ench, int level) {
+        if (ench.isTreasureOnly()) {
             return 4;
         }
         return Math.max(1, Math.min(level, 5));
     }
 
     public int calculateTotalCost() {
-        ItemStack stack = this.menu.getSlot(0).getItem();
-        if (stack.isEmpty()) {
-            return 0;
-        }
-
-        RegistryAccess regAccess = this.logic.getWorld().registryAccess();
-        var reg = regAccess.registryOrThrow(Registries.ENCHANTMENT);
         int total = 0;
+        ItemStack stack = this.menu.getSlot(0).getItem();
+        Map<Enchantment, Integer> existing = EnchantmentHelper.getEnchantments(stack);
 
         for (Entry<Enchantment, Integer> e : this.logic.getCurrentEnchantments().entrySet()) {
             Enchantment enchant = e.getKey();
             int selectedLevel = e.getValue();
+            int existingLevel = existing.getOrDefault(enchant, 0);
 
-            if (selectedLevel <= 0) continue;
-
-            // NeoForge 1.21 way to get existing level
-            Holder<Enchantment> holder = reg.getHolder(reg.getResourceKey(enchant).orElseThrow()).orElse(null);
-            int existingLevel = holder != null ? stack.getEnchantmentLevel(holder) : 0;
-
-            // Only charge if increasing level
             if (selectedLevel > existingLevel) {
                 int levelDifference = selectedLevel - existingLevel;
-                total += xpCost(enchant, levelDifference, regAccess);
+                total += xpCost(enchant, levelDifference);
             }
         }
-
-        return Math.max(total, 0);
+        return Math.max(0, total);
     }
 
     @Override
@@ -169,11 +151,9 @@ public class GuiAdvancedTable extends AbstractContainerScreen<ContainerAdvancedT
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(guiGraphics, mouseX, mouseY, partialTicks);
+        this.renderBackground(guiGraphics);
         super.render(guiGraphics, mouseX, mouseY, partialTicks);
         this.renderTooltip(guiGraphics, mouseX, mouseY);
-        if (!this.enchantButtonIcon.isEmpty() && this.enchantButton != null)
-            guiGraphics.renderItem(this.enchantButtonIcon, this.enchantButton.getX() + 5, this.enchantButton.getY() + 2);
     }
 
     public void populateEnchantmentSliders() {
@@ -200,19 +180,13 @@ public class GuiAdvancedTable extends AbstractContainerScreen<ContainerAdvancedT
     }
 
     public void lockLabels() {
-        var reg = this.logic.getWorld().registryAccess().registryOrThrow(Registries.ENCHANTMENT);
         for (GuiEnchantmentLabel label : this.enchantmentListAll) {
             label.setLocked(false);
             Enchantment enchantment = label.getEnchantment();
             for (Entry<Enchantment, Integer> data : this.logic.getCurrentEnchantments().entrySet()) {
-                boolean incompatible = false;
-                if (enchantment != data.getKey() && data.getValue() > 0) {
-                    Holder<Enchantment> h1 = reg.getHolder(reg.getResourceKey(enchantment).orElseThrow()).orElse(null);
-                    Holder<Enchantment> h2 = reg.getHolder(reg.getResourceKey(data.getKey()).orElseThrow()).orElse(null);
-                    incompatible = h1 != null && h2 != null && !Enchantment.areCompatible(h1, h2);
-                }
+                boolean isIncompatable = enchantment != data.getKey() && data.getValue() > 0 && !data.getKey().isCompatibleWith(enchantment);
                 boolean isOverLeveled = enchantment == data.getKey() && data.getValue() > enchantment.getMaxLevel();
-                if (isOverLeveled || incompatible) {
+                if (isOverLeveled || isIncompatable) {
                     label.setLocked(true);
                     break;
                 }
@@ -235,14 +209,14 @@ public class GuiAdvancedTable extends AbstractContainerScreen<ContainerAdvancedT
     }
 
     @Override
-    public boolean mouseScrolled(double mx, double my, double deltaX, double deltaY) {
+    public boolean mouseScrolled(double mx, double my, double delta) {
         int total = this.enchantmentListAll.size();
         int visible = 4;
         int maxOffset = Math.max(0, total - visible);
 
-        if (deltaY > 0) {
+        if (delta > 0) {
             this.listOffset--;
-        } else if (deltaY < 0) {
+        } else if (delta < 0) {
             this.listOffset++;
         }
 
@@ -351,7 +325,7 @@ public class GuiAdvancedTable extends AbstractContainerScreen<ContainerAdvancedT
         info.add(" ");
         String shiftKey = minecraft.options.keyShift.getKey().getDisplayName().getString();
         info.add(ChatFormatting.YELLOW + I18n.get("eplus.info.tip.prefix") + ChatFormatting.RESET + I18n.get("eplus.info.tip." + this.tips[this.currentTip], shiftKey));
-        NeoForge.EVENT_BUS.post(new InfoBoxEvent(this, info));
+        MinecraftForge.EVENT_BUS.post(new InfoBoxEvent(this, info));
         return info;
     }
 

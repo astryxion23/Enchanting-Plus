@@ -10,50 +10,56 @@ import net.darkhax.eplus.creativetab.CreativeTabEPlus;
 import net.darkhax.eplus.inventory.ModContainers;
 import net.darkhax.eplus.item.ModItems;
 import net.darkhax.eplus.network.GuiHandler;
-import net.darkhax.eplus.network.NetworkRegistration;
+import net.darkhax.eplus.network.messages.MessageEnchant;
+import net.darkhax.eplus.network.messages.MessageSliderUpdate;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.neoforged.fml.loading.FMLEnvironment;
-import net.neoforged.fml.loading.FMLPaths;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.registries.DeferredHolder;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.network.NetworkRegistry;
+import net.minecraftforge.network.simple.SimpleChannel;
+import net.minecraftforge.registries.RegistryObject;
 
 @Mod("eplus")
 public final class EnchantingPlus {
+
+    private static final String PROTOCOL = "1";
+    public static final SimpleChannel NETWORK = NetworkRegistry.newSimpleChannel(
+            new ResourceLocation("eplus", "main"),
+            () -> PROTOCOL,
+            PROTOCOL::equals,
+            PROTOCOL::equals
+    );
 
     public static final Predicate<ItemStack> TEST_ENCHANTABILITY = (stack) ->
             !stack.isEmpty() && !Blacklist.isItemBlacklisted(stack)
                     && (stack.isEnchantable() || stack.isEnchanted() || stack.getItem() == Items.BOOK || stack.getItem() == Items.ENCHANTED_BOOK);
 
-    public static final DeferredHolder<Block, Block> blockAdvancedTable = ModBlocks.ADVANCED_TABLE;
-    public static final DeferredHolder<Block, Block> blockDecorativeBook = ModBlocks.DECORATIVE_BOOK;
-    public static final DeferredHolder<Item, Item> itemAdvancedTable = ModItems.ADVANCED_TABLE;
-    public static final DeferredHolder<Item, Item> itemTableUpgrade = ModItems.TABLE_UPGRADE;
-    public static final DeferredHolder<Item, Item> itemDecorativeBook = ModItems.DECORATIVE_BOOK;
-    public static final DeferredHolder<net.minecraft.world.item.CreativeModeTab, net.minecraft.world.item.CreativeModeTab> creativeTab = CreativeTabEPlus.TAB;
+    public static final RegistryObject<Block> blockAdvancedTable = ModBlocks.ADVANCED_TABLE;
+    public static final RegistryObject<Block> blockDecorativeBook = ModBlocks.DECORATIVE_BOOK;
+    public static final RegistryObject<Item> itemAdvancedTable = ModItems.ADVANCED_TABLE;
+    public static final RegistryObject<Item> itemTableUpgrade = ModItems.TABLE_UPGRADE;
+    public static final RegistryObject<Item> itemDecorativeBook = ModItems.DECORATIVE_BOOK;
+    public static final RegistryObject<net.minecraft.world.item.CreativeModeTab> creativeTab = CreativeTabEPlus.TAB;
 
-    public EnchantingPlus(IEventBus modBus) {
+    public EnchantingPlus() {
+        IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
         modBus.addListener(this::commonSetup);
         ModBlocks.BLOCKS.register(modBus);
         ModItems.ITEMS.register(modBus);
         ModTileEntities.BLOCK_ENTITIES.register(modBus);
         ModContainers.MENUS.register(modBus);
         CreativeTabEPlus.CREATIVE_TABS.register(modBus);
-        modBus.addListener(NetworkRegistration::register);
-        if (FMLEnvironment.dist == Dist.CLIENT) {
-            try {
-                modBus.register(Class.forName("net.darkhax.eplus.client.ClientSetup"));
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException("Client setup class not found", e);
-            }
-        }
+        NETWORK.registerMessage(0, MessageEnchant.class, MessageEnchant::encode, MessageEnchant::decode, MessageEnchant::handle);
+        NETWORK.registerMessage(1, MessageSliderUpdate.class, MessageSliderUpdate::encode, MessageSliderUpdate::decode, MessageSliderUpdate::handle);
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {

@@ -6,7 +6,6 @@ import java.util.Map.Entry;
 import java.util.UUID;
 
 import net.darkhax.eplus.inventory.ItemStackHandlerEnchant;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -46,28 +45,28 @@ public class TileEntityAdvancedTable extends TileEntityWithBook {
     }
 
     @Override
-    protected void saveAdditional(CompoundTag dataTag, HolderLookup.Provider registries) {
-        super.saveAdditional(dataTag, registries);
+    protected void saveAdditional(CompoundTag dataTag) {
+        super.saveAdditional(dataTag);
         ListTag list = new ListTag();
         for (Entry<UUID, ItemStackHandlerEnchant> inventory : this.inventories.entrySet()) {
             CompoundTag invTag = new CompoundTag();
             invTag.putUUID("Owner", inventory.getKey());
-            invTag.put("Inventory", inventory.getValue().serializeNBT(registries));
+            invTag.put("Inventory", inventory.getValue().serializeNBT());
             list.add(invTag);
         }
         dataTag.put("InvList", list);
     }
 
     @Override
-    protected void loadAdditional(CompoundTag dataTag, HolderLookup.Provider registries) {
-        super.loadAdditional(dataTag, registries);
+    public void load(CompoundTag dataTag) {
+        super.load(dataTag);
         this.inventories.clear();
         ListTag list = dataTag.getList("InvList", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
             CompoundTag tag = list.getCompound(i);
             UUID owner = tag.getUUID("Owner");
             ItemStackHandlerEnchant inv = new ItemStackHandlerEnchant(this);
-            inv.deserializeNBT(registries, tag.getCompound("Inventory"));
+            inv.deserializeNBT(tag.getCompound("Inventory"));
             this.inventories.put(owner, inv);
         }
     }

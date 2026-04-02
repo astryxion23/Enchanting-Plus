@@ -10,7 +10,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.util.Mth;
 
-public abstract class TileEntityWithBook extends BlockEntity {
+public abstract class TileEntityWithBook extends BlockEntity implements net.minecraftforge.common.extensions.IForgeBlockEntity {
 
     private static final Random rand = new Random();
 

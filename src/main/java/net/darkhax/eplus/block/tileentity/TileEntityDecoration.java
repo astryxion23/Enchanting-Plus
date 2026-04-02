@@ -2,7 +2,6 @@ package net.darkhax.eplus.block.tileentity;
 
 import java.awt.Color;
 
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.core.BlockPos;
@@ -29,16 +28,16 @@ public class TileEntityDecoration extends TileEntityWithBook {
     }
 
     @Override
-    protected void saveAdditional(CompoundTag dataTag, HolderLookup.Provider registries) {
-        super.saveAdditional(dataTag, registries);
+    protected void saveAdditional(CompoundTag dataTag) {
+        super.saveAdditional(dataTag);
         dataTag.putFloat("Height", this.height);
         dataTag.putInt("Color", this.color);
         dataTag.putInt("Variant", this.variant);
     }
 
     @Override
-    protected void loadAdditional(CompoundTag dataTag, HolderLookup.Provider registries) {
-        super.loadAdditional(dataTag, registries);
+    public void load(CompoundTag dataTag) {
+        super.load(dataTag);
         this.height = dataTag.getFloat("Height");
         this.color = dataTag.getInt("Color");
         this.variant = dataTag.getInt("Variant");
