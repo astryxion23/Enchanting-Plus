@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " g ",
+    "gbg",
+    " g "
+  ],
+  "key": {
+    "g": { "item": "minecraft:glowstone" },
+    "b": { "item": "minecraft:book" }
+  },
+  "result": {
+    "id": "eplus:decorative_book",
+    "count": 1
+  }
+}
