@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "gbg",
+    "ctc",
+    "geg"
+  ],
+  "key": {
+    "g": { "tag": "c:ingots/gold" },
+    "b": { "item": "eplus:decorative_book" },
+    "c": { "item": "minecraft:crying_obsidian" },
+    "t": { "item": "minecraft:enchanting_table" },
+    "e": { "item": "minecraft:ender_eye" }
+  },
+  "result": {
+    "count": 1,
+    "id": "eplus:advanced_table"
+  }
+}

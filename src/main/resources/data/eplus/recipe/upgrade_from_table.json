@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    { "item": "minecraft:enchanting_table" },
+    { "item": "eplus:table_upgrade" }
+  ],
+  "result": {
+    "count": 1,
+    "id": "eplus:advanced_table"
+  }
+}
