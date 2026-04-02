@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "gbg",
+    "o o",
+    "geg"
+  ],
+  "key": {
+    "b": { "item": "minecraft:book" },
+    "o": { "item": "minecraft:obsidian" },
+    "e": { "item": "minecraft:ender_eye" },
+    "g": { "tag": "forge:ingots/gold" }
+  },
+  "result": {
+    "item": "eplus:table_upgrade"
+  }
+}

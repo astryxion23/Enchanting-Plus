@@ -1,0 +1,25 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="All Rights Reserved"
+
+[[mods]]
+modId="eplus"
+version="1.0.0"
+displayName="Enchanting Plus"
+description="Provides a less random enchanting system."
+authors="Astryxion"
+credits="Darkhax"
+
+[[dependencies.eplus]]
+modId="forge"
+mandatory=true
+versionRange="[47,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.eplus]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.20.1]"
+ordering="NONE"
+side="BOTH"
