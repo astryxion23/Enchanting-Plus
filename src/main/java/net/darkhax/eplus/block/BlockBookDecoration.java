@@ -4,13 +4,11 @@ import net.darkhax.eplus.ConfigurationHandler;
 import net.darkhax.eplus.block.tileentity.TileEntityDecoration;
 import net.darkhax.eplus.block.tileentity.TileEntityWithBook;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
@@ -22,7 +20,6 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
 
@@ -37,15 +34,13 @@ public class BlockBookDecoration extends Block implements EntityBlock {
     }
 
     @Override
-    @Nullable
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-        return new TileEntityDecoration(ModTileEntities.DECORATION.get(), pos, state);
+        return new TileEntityDecoration(ModTileEntities.DECORATION, pos, state);
     }
 
     @Override
-    @Nullable
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
-        return type == ModTileEntities.DECORATION.get() ? (lvl, pos, st, be) -> TileEntityWithBook.tick(lvl, pos, st, (TileEntityWithBook) be) : null;
+        return type == ModTileEntities.DECORATION ? (lvl, pos, st, be) -> TileEntityWithBook.tick(lvl, pos, st, (TileEntityWithBook) be) : null;
     }
 
     @Override
@@ -63,12 +58,12 @@ public class BlockBookDecoration extends Block implements EntityBlock {
     }
 
     @Override
-    protected InteractionResult useWithoutItem(BlockState state, Level worldIn, BlockPos pos, Player playerIn, BlockHitResult hit) {
-        if (!worldIn.isClientSide && !playerIn.getMainHandItem().isEmpty() && worldIn.getBlockEntity(pos) instanceof TileEntityDecoration) {
+    public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player playerIn, net.minecraft.world.InteractionHand hand, BlockHitResult hit) {
+        if (!worldIn.isClientSide && !playerIn.getItemInHand(hand).isEmpty() && worldIn.getBlockEntity(pos) instanceof TileEntityDecoration) {
             TileEntityDecoration deco = (TileEntityDecoration) worldIn.getBlockEntity(pos);
-            if (playerIn.getMainHandItem().getItem() == net.minecraft.world.item.Items.FEATHER)
+            if (playerIn.getItemInHand(hand).getItem() == net.minecraft.world.item.Items.FEATHER)
                 deco.increaseHeight();
-            else if (playerIn.getMainHandItem().getItem() == net.minecraft.world.item.Items.IRON_INGOT)
+            else if (playerIn.getItemInHand(hand).getItem() == net.minecraft.world.item.Items.IRON_INGOT)
                 deco.decreaseHeight();
             worldIn.sendBlockUpdated(pos, state, state, 8);
         }
@@ -76,11 +71,10 @@ public class BlockBookDecoration extends Block implements EntityBlock {
     }
 
     @Override
-    public void setPlacedBy(Level worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
+    public void setPlacedBy(Level worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
         BlockEntity te = worldIn.getBlockEntity(pos);
         if (te instanceof TileEntityDecoration) {
-            CustomData data = stack.get(DataComponents.CUSTOM_DATA);
-            int variant = (data != null && data.copyTag().contains("Variant")) ? data.copyTag().getInt("Variant") : 0;
+            int variant = stack.hasTag() && stack.getTag().contains("Variant") ? stack.getTag().getInt("Variant") : stack.getDamageValue();
             ((TileEntityDecoration) te).variant = Math.min(Math.max(variant, 0), TYPES.length - 1);
         }
     }
@@ -95,11 +89,9 @@ public class BlockBookDecoration extends Block implements EntityBlock {
 
     public ItemStack getData(TileEntityDecoration tile) {
         ItemStack stack = new ItemStack(this);
-        net.minecraft.nbt.CompoundTag tag = new net.minecraft.nbt.CompoundTag();
-        tag.putFloat("Height", tile.height);
-        tag.putInt("Color", tile.color);
-        tag.putInt("Variant", tile.variant);
-        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+        stack.getOrCreateTag().putFloat("Height", tile.height);
+        stack.getOrCreateTag().putInt("Color", tile.color);
+        stack.getOrCreateTag().putInt("Variant", tile.variant);
         return stack;
     }
 

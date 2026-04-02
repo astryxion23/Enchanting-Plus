@@ -1,11 +1,11 @@
 pluginManagement {
     repositories {
         gradlePluginPortal()
+        maven { url = 'https://maven.fabricmc.net/' }
     }
 }
 
-plugins {
-    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
-}
+// Foojay resolver can pull Gson 2.9.1; optional for toolchain auto-detection
+// plugins { id 'org.gradle.toolchains.foojay-resolver-convention' version '0.5.0' }
 
 rootProject.name = 'EnchantingPlus'

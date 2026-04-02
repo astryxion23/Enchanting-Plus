@@ -1,0 +1,4 @@
+// Force Gson 2.10.1 on root project buildscript (Java 17+ Loom fix)
+gradle.projectsLoaded {
+    gradle.rootProject.buildscript.configurations.classpath.resolutionStrategy.force('com.google.code.gson:gson:2.10.1')
+}

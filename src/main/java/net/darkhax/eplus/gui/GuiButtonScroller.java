@@ -9,7 +9,7 @@ import net.minecraft.network.chat.Component;
 
 public class GuiButtonScroller extends Button {
 
-    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath("eplus", "textures/gui/enchant.png");
+    private static final ResourceLocation TEXTURE = new ResourceLocation("eplus", "textures/gui/enchant.png");
     public int sliderY = 1;
     public GuiAdvancedTable parent;
 

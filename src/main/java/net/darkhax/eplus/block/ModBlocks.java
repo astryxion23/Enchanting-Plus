@@ -1,14 +1,14 @@
 package net.darkhax.eplus.block;
 
-import net.minecraft.world.level.block.Block;
+import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.neoforged.neoforge.registries.DeferredHolder;
-import net.neoforged.neoforge.registries.DeferredRegister;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.Block;
 
 public class ModBlocks {
 
-    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(BuiltInRegistries.BLOCK, "eplus");
-
-    public static final DeferredHolder<Block, Block> ADVANCED_TABLE = BLOCKS.register("advanced_table", BlockAdvancedTable::new);
-    public static final DeferredHolder<Block, Block> DECORATIVE_BOOK = BLOCKS.register("decorative_book", BlockBookDecoration::new);
+    public static final Block ADVANCED_TABLE = Registry.register(BuiltInRegistries.BLOCK,
+            new ResourceLocation("eplus", "advanced_table"), new BlockAdvancedTable());
+    public static final Block DECORATIVE_BOOK = Registry.register(BuiltInRegistries.BLOCK,
+            new ResourceLocation("eplus", "decorative_book"), new BlockBookDecoration());
 }

@@ -1,6 +1,6 @@
 package net.darkhax.eplus.item;
 
-import net.darkhax.eplus.EnchantingPlus;
+import net.darkhax.eplus.block.ModBlocks;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.context.UseOnContext;
@@ -20,7 +20,7 @@ public class ItemTableUpgrade extends Item {
         BlockPos pos = context.getClickedPos();
 
         if (worldIn.getBlockState(pos).getBlock() == Blocks.ENCHANTING_TABLE) {
-            worldIn.setBlock(pos, EnchantingPlus.blockAdvancedTable.get().defaultBlockState(), 3);
+            worldIn.setBlock(pos, ModBlocks.ADVANCED_TABLE.defaultBlockState(), 3);
 
             if (!context.getPlayer().isCreative())
                 context.getItemInHand().shrink(1);

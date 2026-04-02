@@ -11,59 +11,39 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Holder;
-import net.minecraft.core.RegistryAccess;
 import net.minecraft.world.level.Level;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.tags.EnchantmentTags;
-import net.neoforged.neoforge.common.NeoForge;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 public final class EnchLogic {
 
     public static int calculateNewEnchCost(Enchantment enchantment, int level) {
-        return calculateNewEnchCost(null, enchantment, level);
-    }
-
-    public static int calculateNewEnchCost(RegistryAccess registryAccess, Enchantment enchantment, int level) {
         int cost = ConfigurationHandler.baseCost;
-        int weight = 10; // default; 1.21 uses data-driven weights
+        Enchantment.Rarity rarity = enchantment.getRarity();
+        int weight = rarity != null ? rarity.getWeight() : 10;
         cost *= Math.max(11 - weight, 1);
         cost *= level;
         cost *= ConfigurationHandler.costFactor;
-        if (registryAccess != null) {
-            if (isCurseEnchantment(registryAccess, enchantment)) cost *= ConfigurationHandler.curseFactor;
-            else if (isTreasureOnlyEnchantment(registryAccess, enchantment)) cost *= ConfigurationHandler.treasureFactor;
+        if (enchantment.isCurse()) {
+            cost *= ConfigurationHandler.curseFactor;
+        } else if (enchantment.isTreasureOnly()) {
+            cost *= ConfigurationHandler.treasureFactor;
         }
         EnchantmentCostEvent event = new EnchantmentCostEvent(cost, enchantment, level);
-        NeoForge.EVENT_BUS.post(event);
+        for (java.util.function.Consumer<EnchantmentCostEvent> listener : EnchantingPlus.ENCHANTMENT_COST_LISTENERS)
+            listener.accept(event);
         return event.getCost();
     }
-
-    public static boolean isCurseEnchantment(RegistryAccess registryAccess, Enchantment enchantment) {
-        var reg = registryAccess.registryOrThrow(Registries.ENCHANTMENT);
-        Holder<Enchantment> holder = reg.getHolder(reg.getResourceKey(enchantment).orElseThrow()).orElse(null);
-        return holder != null && holder.is(EnchantmentTags.CURSE);
-    }
-
-    public static boolean isTreasureOnlyEnchantment(RegistryAccess registryAccess, Enchantment enchantment) {
-        var reg = registryAccess.registryOrThrow(Registries.ENCHANTMENT);
-        Holder<Enchantment> holder = reg.getHolder(reg.getResourceKey(enchantment).orElseThrow()).orElse(null);
-        return holder != null && holder.is(EnchantmentTags.TREASURE);
-    }
-
 
     public static List<Enchantment> getValidEnchantments(ItemStack stack, Level world, BlockPos pos) {
         List<Enchantment> enchList = new ArrayList<>();
         if (!stack.isEmpty() && (stack.isEnchantable() || stack.isEnchanted())) {
-            var reg = world.registryAccess().registryOrThrow(Registries.ENCHANTMENT);
-            ConfigurationHandler.buildEnchantmentBlacklist(world.registryAccess());
-            for (Enchantment enchantment : reg) {
+            for (Enchantment enchantment : BuiltInRegistries.ENCHANTMENT) {
                 if (Blacklist.isEnchantmentBlacklisted(enchantment) || !enchantment.canEnchant(stack))
                     continue;
                 // Treasure-only (e.g. Mending): always allow on advanced table; curses need wicked night
-                boolean isTreasure = isTreasureOnlyEnchantment(world.registryAccess(), enchantment);
-                boolean isCurseEnch = isCurseEnchantment(world.registryAccess(), enchantment);
-                boolean allowTreasure = !isTreasure || isCurse(world, enchantment) || (isTreasure && !isCurseEnch);
+                boolean allowTreasure = !enchantment.isTreasureOnly()
+                    || isCurse(world, enchantment)
+                    || (enchantment.isTreasureOnly() && !enchantment.isCurse());
                 if (allowTreasure) {
                     enchList.add(enchantment);
                 }
@@ -73,17 +53,17 @@ public final class EnchLogic {
     }
 
     public static boolean isCurse(Level world, Enchantment enchantment) {
-        return isCurseEnchantment(world.registryAccess(), enchantment) && isWikedNight(world);
+        return enchantment.isCurse() && isWikedNight(world);
     }
 
     public static boolean isTreasuresAvailable(Enchantment enchantment, Level world, BlockPos pos, BlockPos down) {
-        if (isCurseEnchantment(world.registryAccess(), enchantment) || !isTreasureOnlyEnchantment(world.registryAccess(), enchantment) || world.isDay()) return false;
+        if (enchantment.isCurse() || !enchantment.isTreasureOnly() || world.isDay()) return false;
         for (int x = -1; x <= 1; x++) {
             for (int z = -1; z <= 1; z++) {
                 BlockPos currentPos = down.offset(x, 0, z);
                 Block block = world.getBlockState(currentPos).getBlock();
                 BlockState stateAt = world.getBlockState(currentPos);
-                if (stateAt.getEnchantPowerBonus(world, currentPos) <= 0)
+                if (net.darkhax.eplus.util.EnchantmentUtils.getEnchantPowerBonus(stateAt, world, currentPos) <= 0)
                     return false;
             }
         }

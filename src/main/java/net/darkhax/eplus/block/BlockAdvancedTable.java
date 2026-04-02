@@ -22,9 +22,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
-
-import javax.annotation.Nullable;
-
 public class BlockAdvancedTable extends Block implements EntityBlock {
 
     private static final VoxelShape BOUNDS = Block.box(0, 0, 0, 16, 12, 16);
@@ -34,15 +31,13 @@ public class BlockAdvancedTable extends Block implements EntityBlock {
     }
 
     @Override
-    @Nullable
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-        return new TileEntityAdvancedTable(ModTileEntities.ADVANCED_TABLE.get(), pos, state);
+        return new TileEntityAdvancedTable(ModTileEntities.ADVANCED_TABLE, pos, state);
     }
 
     @Override
-    @Nullable
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
-        return type == ModTileEntities.ADVANCED_TABLE.get() ? (lvl, pos, st, be) -> net.darkhax.eplus.block.tileentity.TileEntityWithBook.tick(lvl, pos, st, (net.darkhax.eplus.block.tileentity.TileEntityWithBook) be) : null;
+        return type == ModTileEntities.ADVANCED_TABLE ? (lvl, pos, st, be) -> net.darkhax.eplus.block.tileentity.TileEntityWithBook.tick(lvl, pos, st, (net.darkhax.eplus.block.tileentity.TileEntityWithBook) be) : null;
     }
 
     @Override
@@ -67,11 +62,11 @@ public class BlockAdvancedTable extends Block implements EntityBlock {
     }
 
     @Override
-    protected InteractionResult useWithoutItem(BlockState state, Level worldIn, BlockPos pos, Player playerIn, BlockHitResult hit) {
+    public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player playerIn, net.minecraft.world.InteractionHand hand, BlockHitResult hit) {
         if (!worldIn.isClientSide) {
             BlockEntity te = worldIn.getBlockEntity(pos);
             if (te instanceof TileEntityAdvancedTable)
-                ((ServerPlayer) playerIn).openMenu(new GuiHandler.AdvancedTableContainerProvider((TileEntityAdvancedTable) te, pos), buf -> buf.writeBlockPos(pos));
+                playerIn.openMenu(new GuiHandler.AdvancedTableContainerProvider((TileEntityAdvancedTable) te, pos));
         }
         return InteractionResult.sidedSuccess(worldIn.isClientSide);
     }

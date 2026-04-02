@@ -43,7 +43,7 @@ public abstract class TileEntityBookRenderer<T extends TileEntityWithBook> imple
         this.bookModel.setupAnim(time, left, right, open);
         ResourceLocation texture = getTexture(te);
         VertexConsumer vertexConsumer = buf.getBuffer(RenderType.entityCutoutNoCull(texture));
-        this.bookModel.renderToBuffer(m, vertexConsumer, light, overlay);
+        this.bookModel.renderToBuffer(m, vertexConsumer, light, overlay, 1.0F, 1.0F, 1.0F, 1.0F);
         m.popPose();
     }
 

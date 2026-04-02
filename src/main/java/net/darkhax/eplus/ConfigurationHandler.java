@@ -9,7 +9,6 @@ import java.util.Properties;
 import net.darkhax.eplus.api.Blacklist;
 import net.darkhax.eplus.util.RegistryUtils;
 import net.darkhax.eplus.util.StackUtils;
-import net.minecraft.core.RegistryAccess;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.ItemStack;
 
@@ -65,19 +64,12 @@ public final class ConfigurationHandler {
                 if (!stack.isEmpty()) Blacklist.blacklist(stack);
             }
         }
-    }
-
-    private static boolean enchantmentBlacklistBuilt = false;
-
-    public static void buildEnchantmentBlacklist(RegistryAccess registryAccess) {
-        if (registryAccess == null || enchantmentBlacklistBuilt) return;
-        enchantmentBlacklistBuilt = true;
         String enchList = props.getProperty("blacklistedEnchantments", "");
         if (!enchList.isEmpty()) {
             for (String enchString : enchList.split(",")) {
                 enchString = enchString.trim();
                 if (enchString.isEmpty()) continue;
-                Enchantment ench = RegistryUtils.getEnchantment(registryAccess, enchString);
+                Enchantment ench = RegistryUtils.getEnchantment(enchString);
                 if (ench != null) Blacklist.blacklist(ench);
             }
         }
