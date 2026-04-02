@@ -5,7 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.darkhax.eplus.EnchantingPlus;
 import net.darkhax.eplus.block.tileentity.EnchantmentLogicController;
 import net.darkhax.eplus.network.payload.SliderUpdatePayload;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.darkhax.eplus.util.EnchantData;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.Font;
@@ -106,7 +106,7 @@ public class GuiEnchantmentLabel {
         if (this.currentLevel < 0) this.currentLevel = 0;
         else if (this.currentLevel > this.enchantment.getMaxLevel()) this.currentLevel = this.enchantment.getMaxLevel();
         ResourceLocation key = this.logic.getWorld().registryAccess().registryOrThrow(Registries.ENCHANTMENT).getKey(this.enchantment);
-        PacketDistributor.sendToServer(new SliderUpdatePayload(key, this.currentLevel));
+        ClientPlayNetworking.send(new SliderUpdatePayload(key, this.currentLevel));
         this.logic.updateEnchantment(this.enchantment, this.currentLevel);
     }
 

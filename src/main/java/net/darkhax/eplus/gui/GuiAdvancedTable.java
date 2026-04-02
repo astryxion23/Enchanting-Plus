@@ -34,8 +34,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 
 public class GuiAdvancedTable extends AbstractContainerScreen<ContainerAdvancedTable> {
 
@@ -83,7 +82,7 @@ public class GuiAdvancedTable extends AbstractContainerScreen<ContainerAdvancedT
         }
         this.enchantButton = Button.builder(Component.empty(), btn -> {
             if (this.canClientAfford()) {
-                PacketDistributor.sendToServer(new EnchantPayload());
+                ClientPlayNetworking.send(new EnchantPayload());
                 this.logic.enchantItem();
             }
         }).bounds(this.leftPos + 32, this.topPos + 38, 26, 20).build();
@@ -117,7 +116,7 @@ public class GuiAdvancedTable extends AbstractContainerScreen<ContainerAdvancedT
 
             // NeoForge 1.21 way to get existing level
             Holder<Enchantment> holder = reg.getHolder(reg.getResourceKey(enchant).orElseThrow()).orElse(null);
-            int existingLevel = holder != null ? stack.getEnchantmentLevel(holder) : 0;
+            int existingLevel = holder != null ? net.minecraft.world.item.enchantment.EnchantmentHelper.getEnchantmentsForCrafting(stack).getLevel(holder) : 0;
 
             // Only charge if increasing level
             if (selectedLevel > existingLevel) {
@@ -349,9 +348,9 @@ public class GuiAdvancedTable extends AbstractContainerScreen<ContainerAdvancedT
             }
         }
         info.add(" ");
-        String shiftKey = minecraft.options.keyShift.getKey().getDisplayName().getString();
+        String shiftKey = minecraft.options.keyShift.getTranslatedKeyMessage().getString();
         info.add(ChatFormatting.YELLOW + I18n.get("eplus.info.tip.prefix") + ChatFormatting.RESET + I18n.get("eplus.info.tip." + this.tips[this.currentTip], shiftKey));
-        NeoForge.EVENT_BUS.post(new InfoBoxEvent(this, info));
+        InfoBoxEvent.EVENT.invoker().onInfoBox(this, info);
         return info;
     }
 

@@ -1,23 +1,25 @@
 package net.darkhax.eplus.item;
 
-import net.darkhax.eplus.EnchantingPlus;
 import net.darkhax.eplus.block.ModBlocks;
 import net.darkhax.eplus.creativetab.CreativeTabEPlus;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.neoforged.neoforge.registries.DeferredRegister;
-import net.neoforged.neoforge.registries.DeferredHolder;
-import net.neoforged.neoforge.registries.DeferredRegister;
 
 public class ModItems {
 
-    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(BuiltInRegistries.ITEM, "eplus");
+    public static Item ADVANCED_TABLE;
+    public static Item TABLE_UPGRADE;
+    public static Item DECORATIVE_BOOK;
 
-    public static final DeferredHolder<Item, Item> ADVANCED_TABLE = ITEMS.register("advanced_table",
-            () -> new BlockItem(ModBlocks.ADVANCED_TABLE.get(), new Item.Properties()));
-    public static final DeferredHolder<Item, Item> TABLE_UPGRADE = ITEMS.register("table_upgrade",
-            () -> new ItemTableUpgrade(new Item.Properties().stacksTo(16)));
-    public static final DeferredHolder<Item, Item> DECORATIVE_BOOK = ITEMS.register("decorative_book",
-            () -> new ItemDecorativeBook(ModBlocks.DECORATIVE_BOOK.get(), new Item.Properties()));
+    public static void register() {
+        ADVANCED_TABLE = Registry.register(BuiltInRegistries.ITEM, ResourceLocation.fromNamespaceAndPath("eplus", "advanced_table"),
+                new BlockItem(ModBlocks.ADVANCED_TABLE, new Item.Properties()));
+        TABLE_UPGRADE = Registry.register(BuiltInRegistries.ITEM, ResourceLocation.fromNamespaceAndPath("eplus", "table_upgrade"),
+                new ItemTableUpgrade(new Item.Properties().stacksTo(16)));
+        DECORATIVE_BOOK = Registry.register(BuiltInRegistries.ITEM, ResourceLocation.fromNamespaceAndPath("eplus", "decorative_book"),
+                new ItemDecorativeBook(ModBlocks.DECORATIVE_BOOK, new Item.Properties()));
+    }
 }

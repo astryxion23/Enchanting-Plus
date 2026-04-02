@@ -1,9 +1,19 @@
 package net.darkhax.eplus.api.event;
 
 import net.minecraft.world.item.enchantment.Enchantment;
-import net.neoforged.bus.api.Event;
+import net.fabricmc.fabric.api.event.Event;
+import net.fabricmc.fabric.api.event.EventFactory;
 
-public class EnchantmentCostEvent extends Event {
+public class EnchantmentCostEvent {
+
+    public static final Event<EnchantmentCostCallback> EVENT = EventFactory.createArrayBacked(EnchantmentCostCallback.class, callbacks -> event -> {
+        for (EnchantmentCostCallback c : callbacks) c.onCost(event);
+    });
+
+    @FunctionalInterface
+    public interface EnchantmentCostCallback {
+        void onCost(EnchantmentCostEvent event);
+    }
 
     private final Enchantment enchantment;
     private final int level;

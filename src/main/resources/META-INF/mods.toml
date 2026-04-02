@@ -1,5 +1,5 @@
 modLoader="javafml"
-loaderVersion="[47,)"
+loaderVersion="[36,)"
 license="All Rights Reserved"
 
 [[mods]]
@@ -13,13 +13,13 @@ credits="Darkhax"
 [[dependencies.eplus]]
 modId="forge"
 mandatory=true
-versionRange="[47,)"
+versionRange="[36.2,)"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.eplus]]
 modId="minecraft"
 mandatory=true
-versionRange="[1.20.1]"
+versionRange="[1.16.5]"
 ordering="NONE"
 side="BOTH"

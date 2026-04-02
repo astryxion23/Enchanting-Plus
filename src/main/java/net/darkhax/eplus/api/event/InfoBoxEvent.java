@@ -3,12 +3,19 @@ package net.darkhax.eplus.api.event;
 import java.util.List;
 
 import net.darkhax.eplus.gui.GuiAdvancedTable;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.bus.api.Event;
+import net.fabricmc.fabric.api.event.Event;
+import net.fabricmc.fabric.api.event.EventFactory;
 
-@OnlyIn(Dist.CLIENT)
-public class InfoBoxEvent extends Event {
+public class InfoBoxEvent {
+
+    public static final Event<InfoBoxCallback> EVENT = EventFactory.createArrayBacked(InfoBoxCallback.class, callbacks -> (gui, info) -> {
+        for (InfoBoxCallback callback : callbacks) callback.onInfoBox(gui, info);
+    });
+
+    @FunctionalInterface
+    public interface InfoBoxCallback {
+        void onInfoBox(GuiAdvancedTable gui, List<String> info);
+    }
 
     private final GuiAdvancedTable gui;
     private final List<String> info;
