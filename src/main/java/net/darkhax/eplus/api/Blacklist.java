@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.darkhax.eplus.util.StackUtils;
-import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.item.ItemStack;
 
 public final class Blacklist {
 

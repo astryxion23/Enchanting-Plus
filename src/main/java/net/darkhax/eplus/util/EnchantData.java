@@ -1,6 +1,6 @@
 package net.darkhax.eplus.util;
 
-import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.enchantment.Enchantment;
 
 public final class EnchantData {
 

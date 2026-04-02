@@ -1,15 +1,15 @@
 package net.darkhax.eplus.inventory;
 
 import net.darkhax.eplus.EnchantingPlus;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.neoforged.neoforge.items.ItemStackHandler;
+import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraftforge.items.ItemStackHandler;
 
 public class ItemStackHandlerEnchant extends ItemStackHandler {
 
-    protected BlockEntity tableTile;
+    protected TileEntity tableTile;
 
-    public ItemStackHandlerEnchant(BlockEntity tableTile) {
+    public ItemStackHandlerEnchant(TileEntity tableTile) {
         super(1);
         this.tableTile = tableTile;
     }

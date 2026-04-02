@@ -1,16 +1,16 @@
 package net.darkhax.eplus.util;
 
-import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.inventory.EquipmentSlotType;
 
 public final class EntityUtils {
 
-    public static EquipmentSlot getEquipmentSlot(int index) {
+    public static EquipmentSlotType getEquipmentSlot(int index) {
         switch (index) {
-            case 0: return EquipmentSlot.FEET;
-            case 1: return EquipmentSlot.LEGS;
-            case 2: return EquipmentSlot.CHEST;
-            case 3: return EquipmentSlot.HEAD;
-            default: return EquipmentSlot.HEAD;
+            case 0: return EquipmentSlotType.FEET;
+            case 1: return EquipmentSlotType.LEGS;
+            case 2: return EquipmentSlotType.CHEST;
+            case 3: return EquipmentSlotType.HEAD;
+            default: return EquipmentSlotType.HEAD;
         }
     }
 }

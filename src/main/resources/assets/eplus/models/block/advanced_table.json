@@ -1,9 +1,9 @@
 {   "parent": "block/block",
     "textures": {
-        "particle": "eplus:block/enchanting_table_bottom",
-        "bottom": "eplus:block/enchanting_table_bottom",
-        "top": "eplus:block/enchanting_table_top",
-        "side": "eplus:block/enchanting_table_side"
+        "particle": "eplus:blocks/enchanting_table_bottom",
+        "bottom": "eplus:blocks/enchanting_table_bottom",
+        "top": "eplus:blocks/enchanting_table_top",
+        "side": "eplus:blocks/enchanting_table_side"
     },
     "elements": [
         {   "from": [ 0, 0, 0 ],

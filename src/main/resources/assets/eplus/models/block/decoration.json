@@ -1,5 +1,5 @@
 {   "parent": "block/block",
     "textures": {
-        "particle": "eplus:block/enchanting_table_top"
+        "particle": "blocks/bookshelf"
     }
 }

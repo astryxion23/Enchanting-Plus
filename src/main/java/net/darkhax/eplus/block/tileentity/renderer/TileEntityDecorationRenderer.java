@@ -1,23 +1,23 @@
 package net.darkhax.eplus.block.tileentity.renderer;
 
 import net.darkhax.eplus.block.tileentity.TileEntityDecoration;
-import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
+import net.minecraft.util.ResourceLocation;
 
 public class TileEntityDecorationRenderer extends TileEntityBookRenderer<TileEntityDecoration> {
 
     private static final ResourceLocation[] TEXTURES = new ResourceLocation[] {
-            ResourceLocation.fromNamespaceAndPath("eplus", "textures/entity/enchantingplus_book.png"),
-            ResourceLocation.fromNamespaceAndPath("minecraft", "textures/entity/enchanting_table_book.png"),
-            ResourceLocation.fromNamespaceAndPath("eplus", "textures/entity/prismarine_book.png"),
-            ResourceLocation.fromNamespaceAndPath("eplus", "textures/entity/nether_book.png"),
-            ResourceLocation.fromNamespaceAndPath("eplus", "textures/entity/tartarite_book.png"),
-            ResourceLocation.fromNamespaceAndPath("eplus", "textures/entity/white_book.png"),
-            ResourceLocation.fromNamespaceAndPath("eplus", "textures/entity/metal_book.png")
+            new ResourceLocation("eplus", "entity/enchantingplus_book"),
+            new ResourceLocation("minecraft", "entity/enchanting_table_book"),
+            new ResourceLocation("eplus", "entity/prismarine_book"),
+            new ResourceLocation("eplus", "entity/nether_book"),
+            new ResourceLocation("eplus", "entity/tartarite_book"),
+            new ResourceLocation("eplus", "entity/white_book"),
+            new ResourceLocation("eplus", "entity/metal_book")
     };
 
-    public TileEntityDecorationRenderer(BlockEntityRendererProvider.Context context) {
-        super(context);
+    public TileEntityDecorationRenderer(TileEntityRendererDispatcher dispatcher) {
+        super(dispatcher);
     }
 
     @Override

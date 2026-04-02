@@ -7,48 +7,47 @@ import net.darkhax.eplus.block.tileentity.TileEntityAdvancedTable;
 import net.darkhax.eplus.inventory.ItemStackHandlerEnchant;
 import net.darkhax.eplus.network.GuiHandler;
 import net.darkhax.eplus.util.StackUtils;
-import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.EntityBlock;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityTicker;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.shapes.CollisionContext;
-import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.material.Material;
+import net.minecraft.block.material.MaterialColor;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ActionResultType;
+import net.minecraft.util.Hand;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.shapes.ISelectionContext;
+import net.minecraft.util.math.shapes.VoxelShape;
+import net.minecraft.util.math.shapes.VoxelShapes;
+import net.minecraft.world.IBlockReader;
+import net.minecraft.world.World;
+import net.minecraftforge.fml.network.NetworkHooks;
 
-import javax.annotation.Nullable;
-
-public class BlockAdvancedTable extends Block implements EntityBlock {
+public class BlockAdvancedTable extends Block {
 
     private static final VoxelShape BOUNDS = Block.box(0, 0, 0, 16, 12, 16);
 
     public BlockAdvancedTable() {
-        super(Block.Properties.of().mapColor(net.minecraft.world.level.material.MapColor.COLOR_PURPLE).strength(5.0F, 2000.0F).noOcclusion());
+        super(Block.Properties.of(Material.STONE, MaterialColor.COLOR_PURPLE).strength(5.0F, 2000.0F).noOcclusion());
     }
 
     @Override
-    @Nullable
-    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-        return new TileEntityAdvancedTable(ModTileEntities.ADVANCED_TABLE.get(), pos, state);
+    public boolean hasTileEntity(BlockState state) {
+        return true;
     }
 
     @Override
-    @Nullable
-    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
-        return type == ModTileEntities.ADVANCED_TABLE.get() ? (lvl, pos, st, be) -> net.darkhax.eplus.block.tileentity.TileEntityWithBook.tick(lvl, pos, st, (net.darkhax.eplus.block.tileentity.TileEntityWithBook) be) : null;
+    public TileEntity createTileEntity(BlockState state, IBlockReader world) {
+        return new TileEntityAdvancedTable(ModTileEntities.ADVANCED_TABLE);
     }
 
     @Override
-    public void onRemove(BlockState state, Level worldIn, BlockPos pos, BlockState newState, boolean isMoving) {
+    public void onRemove(BlockState state, World worldIn, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!state.is(newState.getBlock())) {
-            BlockEntity te = worldIn.getBlockEntity(pos);
+            TileEntity te = worldIn.getBlockEntity(pos);
             if (te instanceof TileEntityAdvancedTable) {
                 Map<UUID, ItemStackHandlerEnchant> inventories = ((TileEntityAdvancedTable) te).getInveotries();
                 for (ItemStackHandlerEnchant inv : inventories.values()) {
@@ -62,17 +61,17 @@ public class BlockAdvancedTable extends Block implements EntityBlock {
     }
 
     @Override
-    public VoxelShape getShape(BlockState state, net.minecraft.world.level.BlockGetter worldIn, BlockPos pos, CollisionContext context) {
+    public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
         return BOUNDS;
     }
 
     @Override
-    protected InteractionResult useWithoutItem(BlockState state, Level worldIn, BlockPos pos, Player playerIn, BlockHitResult hit) {
+    public ActionResultType use(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult hit) {
         if (!worldIn.isClientSide) {
-            BlockEntity te = worldIn.getBlockEntity(pos);
+            TileEntity te = worldIn.getBlockEntity(pos);
             if (te instanceof TileEntityAdvancedTable)
-                ((ServerPlayer) playerIn).openMenu(new GuiHandler.AdvancedTableContainerProvider((TileEntityAdvancedTable) te, pos), buf -> buf.writeBlockPos(pos));
+                NetworkHooks.openGui((ServerPlayerEntity) playerIn, new GuiHandler.AdvancedTableContainerProvider((TileEntityAdvancedTable) te, pos), pos);
         }
-        return InteractionResult.sidedSuccess(worldIn.isClientSide);
+        return ActionResultType.sidedSuccess(worldIn.isClientSide);
     }
 }

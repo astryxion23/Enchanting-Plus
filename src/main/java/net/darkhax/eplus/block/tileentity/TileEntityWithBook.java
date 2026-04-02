@@ -2,15 +2,13 @@ package net.darkhax.eplus.block.tileentity;
 
 import java.util.Random;
 
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.util.Mth;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.tileentity.ITickableTileEntity;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.tileentity.TileEntityType;
+import net.minecraft.util.math.MathHelper;
 
-public abstract class TileEntityWithBook extends BlockEntity {
+public abstract class TileEntityWithBook extends TileEntity implements ITickableTileEntity {
 
     private static final Random rand = new Random();
 
@@ -25,29 +23,26 @@ public abstract class TileEntityWithBook extends BlockEntity {
     public float bookRotationPrev;
     public float offset;
 
-    public TileEntityWithBook(BlockEntityType<?> type, BlockPos pos, BlockState state) {
-        super(type, pos, state);
+    public TileEntityWithBook(TileEntityType<?> type) {
+        super(type);
     }
 
     public boolean isOpen() {
         return this.bookSpread >= 1;
     }
 
-    public static void tick(Level level, BlockPos pos, BlockState state, TileEntityWithBook te) {
-        te.tickServerOrClient();
-    }
-
-    private void tickServerOrClient() {
+    @Override
+    public void tick() {
         if (level == null) return;
         if (this.bookSpreadPrev != this.bookSpread && (this.bookSpread == 0f || this.bookSpread == 1f))
             level.updateNeighborsAt(worldPosition, level.getBlockState(worldPosition).getBlock());
         this.bookSpreadPrev = this.bookSpread;
         this.bookRotationPrev = this.bookRotation;
-        Player entityplayer = level.getNearestPlayer(worldPosition.getX() + 0.5, worldPosition.getY() + 0.5, worldPosition.getZ() + 0.5, 3.0D, false);
+        PlayerEntity entityplayer = level.getNearestPlayer(worldPosition.getX() + 0.5, worldPosition.getY() + 0.5, worldPosition.getZ() + 0.5, 3.0D, false);
         if (entityplayer != null) {
             double d0 = entityplayer.getX() - (worldPosition.getX() + 0.5);
             double d1 = entityplayer.getZ() - (worldPosition.getZ() + 0.5);
-            this.offset = (float) Mth.atan2(d0, d1); // Minecraft yaw convention: atan2(dx, dz)
+            this.offset = (float) MathHelper.atan2(d0, d1); // Minecraft yaw convention: atan2(dx, dz)
             this.bookSpread += 0.1F;
             if (this.bookSpread < 0.5F || rand.nextInt(40) == 0) {
                 float f1 = this.flipRandom;
@@ -68,13 +63,12 @@ public abstract class TileEntityWithBook extends BlockEntity {
         while (f2 >= (float) Math.PI) f2 -= (float) Math.PI * 2F;
         while (f2 < -(float) Math.PI) f2 += (float) Math.PI * 2F;
         this.bookRotation += f2 * 0.4F;
-        this.bookSpread = Mth.clamp(this.bookSpread, 0.0F, 1.0F);
+        this.bookSpread = MathHelper.clamp(this.bookSpread, 0.0F, 1.0F);
         ++this.tickCount;
         this.pageFlipPrev = this.pageFlip;
         float f = (this.flipRandom - this.pageFlip) * 0.4F;
-        f = Mth.clamp(f, -0.2F, 0.2F);
+        f = MathHelper.clamp(f, -0.2F, 0.2F);
         this.flipTurn += (f - this.flipTurn) * 0.9F;
         this.pageFlip += this.flipTurn;
     }
 }
-

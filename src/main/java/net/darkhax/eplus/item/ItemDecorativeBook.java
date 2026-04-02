@@ -1,9 +1,9 @@
 package net.darkhax.eplus.item;
 
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.context.UseOnContext;
-import net.minecraft.world.level.block.Block;
+import net.minecraft.block.Block;
+import net.minecraft.item.BlockItem;
+import net.minecraft.item.ItemUseContext;
+import net.minecraft.util.ActionResultType;
 
 /**
  * BlockItem that cannot be placed in the world. Used for the decorative book
@@ -16,7 +16,7 @@ public class ItemDecorativeBook extends BlockItem {
     }
 
     @Override
-    public InteractionResult useOn(UseOnContext context) {
-        return InteractionResult.FAIL; // prevent placing the block
+    public ActionResultType useOn(ItemUseContext context) {
+        return ActionResultType.FAIL; // prevent placing the block
     }
 }

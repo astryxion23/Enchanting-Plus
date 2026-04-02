@@ -1,30 +1,30 @@
 package net.darkhax.eplus.gui;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.network.chat.Component;
+import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.util.ResourceLocation;
 
 public class GuiButtonScroller extends Button {
 
-    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath("eplus", "textures/gui/enchant.png");
+    private static final ResourceLocation TEXTURE = new ResourceLocation("eplus", "textures/gui/enchant.png");
     public int sliderY = 1;
     public GuiAdvancedTable parent;
 
     public GuiButtonScroller(GuiAdvancedTable parent, int x, int y, int widthIn, int heightIn) {
-        super(x, y, widthIn, heightIn, Component.empty(), b -> {}, DEFAULT_NARRATION);
+        super(x, y, widthIn, heightIn, net.minecraft.util.text.StringTextComponent.EMPTY, b -> {});
         this.parent = parent;
     }
 
     @Override
-    public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+    public void renderButton(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         if (this.visible) {
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-            guiGraphics.blit(TEXTURE, this.getX(), this.getY() + this.sliderY, this.parent.isSliding || this.parent.enchantmentListAll.size() <= 4 ? this.width : 0, 182, this.width, this.height);
+            RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+            this.parent.getMinecraft().getTextureManager().bind(TEXTURE);
+            this.parent.blit(matrixStack, this.x, this.y + this.sliderY, this.parent.isSliding || this.parent.enchantmentListAll.size() <= 4 ? this.width : 0, 182, this.width, this.height);
             if (this.parent.isSliding) {
-                this.sliderY = mouseY - this.getY() - 7;
+                this.sliderY = mouseY - this.y - 7;
                 this.sliderY = Math.max(1, this.sliderY);
                 this.sliderY = Math.min(56, this.sliderY);
                 this.parent.updateLabels();

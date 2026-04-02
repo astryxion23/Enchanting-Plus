@@ -1,35 +1,27 @@
 package net.darkhax.eplus.gui;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.darkhax.eplus.EnchantingPlus;
 import net.darkhax.eplus.block.tileentity.EnchantmentLogicController;
-import net.darkhax.eplus.network.payload.SliderUpdatePayload;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.darkhax.eplus.network.messages.MessageSliderUpdate;
 import net.darkhax.eplus.util.EnchantData;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.Font;
-import net.minecraft.client.resources.language.I18n;
-import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.ChatFormatting;
-import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextColor;
-import net.minecraft.tags.EnchantmentTags;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.client.gui.AbstractGui;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.resources.I18n;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraftforge.registries.ForgeRegistries;
 
-public class GuiEnchantmentLabel {
+public class GuiEnchantmentLabel extends AbstractGui {
 
-    protected static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath("eplus", "textures/gui/enchant.png");
+    protected static final ResourceLocation TEXTURE = new ResourceLocation("eplus", "textures/gui/enchant.png");
     private static final int HEIGHT = 18;
     private static final int WIDTH = 143;
     private static final int COLOR_BACKGROUND_LOCKED = 0x44d10841;
     private static final int COLOR_BACKGROUND_AVAILABLE = 0x445aaeae;
-    private static final int COLOR_TEXT_ENCHANT = 0xA0E060;
-    private static final int COLOR_TEXT_LOCKED = 0xFF6060;
 
     private final EnchantmentLogicController logic;
     private final Enchantment enchantment;
@@ -57,20 +49,14 @@ public class GuiEnchantmentLabel {
         if (this.currentLevel > this.enchantment.getMaxLevel()) this.locked = true;
     }
 
-    public void draw(GuiGraphics guiGraphics, Font font) {
+    public void draw(MatrixStack m, FontRenderer font) {
         if (!this.visible) return;
         int indexX = this.dragging ? this.sliderX : (this.currentLevel <= this.enchantment.getMaxLevel() ? (int) (this.xPos + 1 + (WIDTH - 6) * (this.currentLevel / (double) this.enchantment.getMaxLevel())) : this.xPos + 1 + WIDTH - 6);
-        guiGraphics.fill(this.xPos + 1, this.yPos + 2, this.xPos + WIDTH, this.yPos + HEIGHT, this.locked ? COLOR_BACKGROUND_LOCKED : COLOR_BACKGROUND_AVAILABLE);
-        RenderSystem.setShaderColor(1, 1, 1, 1);
-        guiGraphics.blit(TEXTURE, indexX, this.yPos + 2, this.isSelected() ? 5 : 0, 197, 5, 16);
-        int textColor = this.locked ? COLOR_TEXT_LOCKED : COLOR_TEXT_ENCHANT;
-        Registry<Enchantment> reg = this.logic.getWorld().registryAccess().registryOrThrow(Registries.ENCHANTMENT);
-        Holder<Enchantment> holder = reg.getHolder(reg.getResourceKey(this.enchantment).orElseThrow()).orElseThrow();
-        int displayLevel = Math.max(1, this.currentLevel);
-        Component base = Enchantment.getFullname(holder, displayLevel);
-        int colorForStyle = isCurse(reg, this.enchantment) ? COLOR_TEXT_LOCKED : textColor;
-        Component styled = base.copy().withStyle(style -> style.withColor(TextColor.fromRgb(colorForStyle)));
-        guiGraphics.drawString(font, styled, this.xPos + 7, this.yPos + 6, 0xFFFFFF, true);
+        fill(m, this.xPos + 1, this.yPos + 2, this.xPos + WIDTH, this.yPos + HEIGHT, this.locked ? COLOR_BACKGROUND_LOCKED : COLOR_BACKGROUND_AVAILABLE);
+        RenderSystem.color4f(1, 1, 1, 1);
+        parent.getMinecraft().getTextureManager().bind(TEXTURE);
+        this.blit(m, indexX, this.yPos + 2, this.isSelected() ? 5 : 0, 197, 5, 16);
+        font.draw(m, this.getDisplayName(), this.xPos + 7, this.yPos + 6, 0x55aaff00);
     }
 
     public boolean isSelected() {
@@ -78,18 +64,9 @@ public class GuiEnchantmentLabel {
     }
 
     public String getDisplayName() {
-        Registry<Enchantment> reg = this.logic.getWorld().registryAccess().registryOrThrow(Registries.ENCHANTMENT);
-        String descId = "enchantment." + reg.getKey(this.enchantment).toShortLanguageKey();
-        String s = I18n.get(descId);
-        if (isCurse(reg, this.enchantment)) s = ChatFormatting.RED + s;
+        String s = I18n.get(this.enchantment.getDescriptionId());
+        if (this.enchantment.isCurse()) s = TextFormatting.RED + s;
         return this.currentLevel <= 0 ? s : s + " " + I18n.get("enchantment.level." + this.currentLevel);
-    }
-
-    private static boolean isCurse(Registry<Enchantment> reg, Enchantment enchantment) {
-        return reg.getResourceKey(enchantment)
-                .flatMap(reg::getHolder)
-                .filter(h -> h.is(EnchantmentTags.CURSE))
-                .isPresent();
     }
 
     public void updateSlider(int xPos) {
@@ -105,8 +82,7 @@ public class GuiEnchantmentLabel {
             this.currentLevel = updatedLevel;
         if (this.currentLevel < 0) this.currentLevel = 0;
         else if (this.currentLevel > this.enchantment.getMaxLevel()) this.currentLevel = this.enchantment.getMaxLevel();
-        ResourceLocation key = this.logic.getWorld().registryAccess().registryOrThrow(Registries.ENCHANTMENT).getKey(this.enchantment);
-        PacketDistributor.sendToServer(new SliderUpdatePayload(key, this.currentLevel));
+        EnchantingPlus.NETWORK.sendToServer(new MessageSliderUpdate(new EnchantData(this.enchantment, this.currentLevel)));
         this.logic.updateEnchantment(this.enchantment, this.currentLevel);
     }
 
@@ -138,19 +114,15 @@ public class GuiEnchantmentLabel {
     public String getDescription() {
         String key = getTranslationKey(this.enchantment);
         String description = I18n.get(key);
-        if (description.startsWith("enchantment.")) {
-            Registry<Enchantment> reg = this.logic.getWorld().registryAccess().registryOrThrow(Registries.ENCHANTMENT);
-            description = I18n.get("tooltip.eplus.missing", reg.getKey(this.enchantment).getNamespace(), key);
-        }
+        if (description.startsWith("enchantment."))
+            description = I18n.get("tooltip.eplus.missing", ForgeRegistries.ENCHANTMENTS.getKey(this.enchantment).getNamespace(), key);
         return description;
     }
 
-    private String getTranslationKey(Enchantment enchant) {
-        if (enchant != null) {
-            Registry<Enchantment> reg = this.logic.getWorld().registryAccess().registryOrThrow(Registries.ENCHANTMENT);
-            ResourceLocation rl = reg.getKey(enchant);
-            if (rl != null)
-                return String.format("enchantment.%s.%s.desc", rl.getNamespace(), rl.getPath());
+    private static String getTranslationKey(Enchantment enchant) {
+        if (enchant != null && ForgeRegistries.ENCHANTMENTS.getKey(enchant) != null) {
+            ResourceLocation rl = ForgeRegistries.ENCHANTMENTS.getKey(enchant);
+            return String.format("enchantment.%s.%s.desc", rl.getNamespace(), rl.getPath());
         }
         return "NULL";
     }

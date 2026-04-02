@@ -5,21 +5,21 @@ import java.util.List;
 
 import net.darkhax.eplus.block.tileentity.EnchantmentLogicController;
 import net.darkhax.eplus.util.EntityUtils;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.MenuType;
-import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.items.SlotItemHandler;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.ContainerType;
+import net.minecraft.inventory.container.Slot;
+import net.minecraft.item.ItemStack;
+import net.minecraftforge.items.SlotItemHandler;
 
-public class ContainerAdvancedTable extends AbstractContainerMenu {
+public class ContainerAdvancedTable extends Container {
 
     public final EnchantmentLogicController logic;
-    private final Inventory playerInv;
+    private final PlayerInventory playerInv;
 
-    public ContainerAdvancedTable(int id, Inventory invPlayer, EnchantmentLogicController logic) {
-        super(ModContainers.ADVANCED_TABLE.get(), id);
+    public ContainerAdvancedTable(int id, PlayerInventory invPlayer, EnchantmentLogicController logic) {
+        super(ModContainers.ADVANCED_TABLE, id);
         this.logic = logic;
         this.playerInv = invPlayer;
 
@@ -40,28 +40,25 @@ public class ContainerAdvancedTable extends AbstractContainerMenu {
     }
 
     @Override
-    public ItemStack quickMoveStack(Player entityPlayer, int idx) {
+    public ItemStack quickMoveStack(PlayerEntity entityPlayer, int idx) {
         ItemStack itemStack = ItemStack.EMPTY;
         Slot clickSlot = this.slots.get(idx);
         if (clickSlot != null && clickSlot.hasItem()) {
             itemStack = clickSlot.getItem().copy();
             if (itemStack.isEmpty()) return ItemStack.EMPTY;
             List<Slot> selectedSlots = new ArrayList<>();
-            boolean fromPlayer = (idx >= 1 && idx <= 40); // slot 0 = enchant, 1-40 = player (hotbar, main, armor)
-            if (fromPlayer) {
+            if (clickSlot.container == playerInv) {
                 for (Slot advSlot : this.slots)
                     if (advSlot != clickSlot && advSlot.mayPlace(itemStack)) selectedSlots.add(advSlot);
             } else {
-                for (int i = 1; i <= 40; i++) {
-                    Slot advSlot = this.slots.get(i);
-                    if (advSlot.mayPlace(itemStack)) selectedSlots.add(advSlot);
-                }
+                for (Slot advSlot : this.slots)
+                    if (advSlot.container == playerInv && advSlot.mayPlace(itemStack)) selectedSlots.add(advSlot);
             }
             for (Slot slot : selectedSlots) {
                 if (!slot.mayPlace(itemStack) || itemStack.isEmpty()) continue;
                 if (slot.hasItem()) {
                     ItemStack stack = slot.getItem();
-                    if (ItemStack.isSameItemSameComponents(itemStack, stack)) {
+                    if (ItemStack.isSame(itemStack, stack) && ItemStack.tagMatches(itemStack, stack)) {
                         int maxSize = Math.min(stack.getMaxStackSize(), slot.getMaxStackSize());
                         int placeAble = maxSize - stack.getCount();
                         if (itemStack.getCount() < placeAble) placeAble = itemStack.getCount();
@@ -97,7 +94,7 @@ public class ContainerAdvancedTable extends AbstractContainerMenu {
     }
 
     @Override
-    public boolean stillValid(Player playerIn) {
+    public boolean stillValid(PlayerEntity playerIn) {
         return playerIn.distanceToSqr(this.logic.getPos().getX() + 0.5, this.logic.getPos().getY() + 0.5, this.logic.getPos().getZ() + 0.5) <= 64.0D && playerIn.isAlive();
     }
 }

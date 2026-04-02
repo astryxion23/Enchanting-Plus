@@ -2,11 +2,8 @@ package net.darkhax.eplus.block.tileentity;
 
 import java.awt.Color;
 
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.tileentity.TileEntityType;
 
 public class TileEntityDecoration extends TileEntityWithBook {
 
@@ -14,8 +11,8 @@ public class TileEntityDecoration extends TileEntityWithBook {
     public int color = Color.WHITE.getRGB();
     public int variant;
 
-    public TileEntityDecoration(BlockEntityType<?> type, BlockPos pos, BlockState state) {
-        super(type, pos, state);
+    public TileEntityDecoration(TileEntityType<?> type) {
+        super(type);
     }
 
     public void decreaseHeight() {
@@ -29,16 +26,17 @@ public class TileEntityDecoration extends TileEntityWithBook {
     }
 
     @Override
-    protected void saveAdditional(CompoundTag dataTag, HolderLookup.Provider registries) {
-        super.saveAdditional(dataTag, registries);
+    public CompoundNBT save(CompoundNBT dataTag) {
+        super.save(dataTag);
         dataTag.putFloat("Height", this.height);
         dataTag.putInt("Color", this.color);
         dataTag.putInt("Variant", this.variant);
+        return dataTag;
     }
 
     @Override
-    protected void loadAdditional(CompoundTag dataTag, HolderLookup.Provider registries) {
-        super.loadAdditional(dataTag, registries);
+    public void load(net.minecraft.block.BlockState state, CompoundNBT dataTag) {
+        super.load(state, dataTag);
         this.height = dataTag.getFloat("Height");
         this.color = dataTag.getInt("Color");
         this.variant = dataTag.getInt("Variant");

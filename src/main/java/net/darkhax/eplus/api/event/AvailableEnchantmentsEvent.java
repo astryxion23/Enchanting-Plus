@@ -2,9 +2,9 @@ package net.darkhax.eplus.api.event;
 
 import java.util.List;
 
-import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.ItemStack;
-import net.neoforged.bus.api.Event;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.item.ItemStack;
+import net.minecraftforge.eventbus.api.Event;
 
 public class AvailableEnchantmentsEvent extends Event {
 
