@@ -6,15 +6,14 @@ import java.util.Map.Entry;
 import java.util.UUID;
 
 import net.darkhax.eplus.inventory.ItemStackHandlerEnchant;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 public class TileEntityAdvancedTable extends TileEntityWithBook {
 
@@ -46,28 +45,25 @@ public class TileEntityAdvancedTable extends TileEntityWithBook {
     }
 
     @Override
-    protected void saveAdditional(CompoundTag dataTag, HolderLookup.Provider registries) {
-        super.saveAdditional(dataTag, registries);
-        ListTag list = new ListTag();
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
+        ValueOutput.ValueOutputList list = output.childrenList("InvList");
         for (Entry<UUID, ItemStackHandlerEnchant> inventory : this.inventories.entrySet()) {
-            CompoundTag invTag = new CompoundTag();
-            invTag.putUUID("Owner", inventory.getKey());
-            invTag.put("Inventory", inventory.getValue().serializeNBT(registries));
-            list.add(invTag);
+            ValueOutput invOut = list.addChild();
+            invOut.store("Owner", UUIDUtil.CODEC, inventory.getKey());
+            ValueOutput invData = invOut.child("Inventory");
+            inventory.getValue().serialize(invData);
         }
-        dataTag.put("InvList", list);
     }
 
     @Override
-    protected void loadAdditional(CompoundTag dataTag, HolderLookup.Provider registries) {
-        super.loadAdditional(dataTag, registries);
+    protected void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
         this.inventories.clear();
-        ListTag list = dataTag.getList("InvList", Tag.TAG_COMPOUND);
-        for (int i = 0; i < list.size(); i++) {
-            CompoundTag tag = list.getCompound(i);
-            UUID owner = tag.getUUID("Owner");
+        for (ValueInput tag : input.childrenListOrEmpty("InvList")) {
+            UUID owner = tag.read("Owner", UUIDUtil.CODEC).orElseThrow();
             ItemStackHandlerEnchant inv = new ItemStackHandlerEnchant(this);
-            inv.deserializeNBT(registries, tag.getCompound("Inventory"));
+            inv.deserialize(tag.childOrEmpty("Inventory"));
             this.inventories.put(owner, inv);
         }
     }

@@ -6,40 +6,38 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-
 import net.darkhax.eplus.EnchLogic;
-import net.darkhax.eplus.EnchantingPlus;
 import net.darkhax.eplus.api.event.InfoBoxEvent;
 import net.darkhax.eplus.block.tileentity.EnchantmentLogicController;
 import net.darkhax.eplus.inventory.ContainerAdvancedTable;
 import net.darkhax.eplus.network.payload.EnchantPayload;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
 import net.minecraft.util.Mth;
 import net.minecraft.core.Holder;
+import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 public class GuiAdvancedTable extends AbstractContainerScreen<ContainerAdvancedTable> {
 
-    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath("eplus", "textures/gui/enchant.png");
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath("eplus", "textures/gui/enchant.png");
     private static final Random RAND = new Random();
 
     private Button enchantButton;
@@ -57,10 +55,8 @@ public class GuiAdvancedTable extends AbstractContainerScreen<ContainerAdvancedT
     private int totalCost = 0;
 
     public GuiAdvancedTable(ContainerAdvancedTable container, Inventory inv, Component title) {
-        super(container, inv, title);
+        super(container, inv, title, 235, 182);
         this.logic = container.logic;
-        this.imageWidth = 235;
-        this.imageHeight = 182;
         this.currentTip = RAND.nextInt(this.tips.length);
     }
 
@@ -71,9 +67,9 @@ public class GuiAdvancedTable extends AbstractContainerScreen<ContainerAdvancedT
         this.scrollbar = new GuiButtonScroller(this, this.leftPos + 206, this.topPos + 16, 12, 15);
         if (EnchLogic.isWikedNight(this.logic.getWorld())) {
             ItemStack bone = new ItemStack(Items.BONE);
-            var reg = this.logic.getWorld().registryAccess().registryOrThrow(Registries.ENCHANTMENT);
-            ResourceKey<Enchantment> key = ResourceKey.create(Registries.ENCHANTMENT, ResourceLocation.fromNamespaceAndPath("minecraft", "projectile_protection"));
-            Holder<Enchantment> h = reg.getHolderOrThrow(key);
+            Registry<Enchantment> reg = this.logic.getWorld().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+            ResourceKey<Enchantment> key = ResourceKey.create(Registries.ENCHANTMENT, Identifier.fromNamespaceAndPath("minecraft", "projectile_protection"));
+            Holder<Enchantment> h = reg.getOrThrow(key);
             ItemEnchantments.Mutable mut = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
             mut.set(h, 1);
             EnchantmentHelper.setEnchantments(bone, mut.toImmutable());
@@ -83,7 +79,7 @@ public class GuiAdvancedTable extends AbstractContainerScreen<ContainerAdvancedT
         }
         this.enchantButton = Button.builder(Component.empty(), btn -> {
             if (this.canClientAfford()) {
-                PacketDistributor.sendToServer(new EnchantPayload());
+                ClientPacketDistributor.sendToServer(new EnchantPayload());
                 this.logic.enchantItem();
             }
         }).bounds(this.leftPos + 32, this.topPos + 38, 26, 20).build();
@@ -106,7 +102,7 @@ public class GuiAdvancedTable extends AbstractContainerScreen<ContainerAdvancedT
         }
 
         RegistryAccess regAccess = this.logic.getWorld().registryAccess();
-        var reg = regAccess.registryOrThrow(Registries.ENCHANTMENT);
+        Registry<Enchantment> reg = regAccess.lookupOrThrow(Registries.ENCHANTMENT);
         int total = 0;
 
         for (Entry<Enchantment, Integer> e : this.logic.getCurrentEnchantments().entrySet()) {
@@ -115,11 +111,9 @@ public class GuiAdvancedTable extends AbstractContainerScreen<ContainerAdvancedT
 
             if (selectedLevel <= 0) continue;
 
-            // NeoForge 1.21 way to get existing level
-            Holder<Enchantment> holder = reg.getHolder(reg.getResourceKey(enchant).orElseThrow()).orElse(null);
-            int existingLevel = holder != null ? stack.getEnchantmentLevel(holder) : 0;
+            Holder<Enchantment> holder = reg.wrapAsHolder(enchant);
+            int existingLevel = stack.getEnchantmentLevel(holder);
 
-            // Only charge if increasing level
             if (selectedLevel > existingLevel) {
                 int levelDifference = selectedLevel - existingLevel;
                 total += xpCost(enchant, levelDifference, regAccess);
@@ -140,40 +134,34 @@ public class GuiAdvancedTable extends AbstractContainerScreen<ContainerAdvancedT
     }
 
     @Override
-    protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        guiGraphics.drawString(this.font, this.title, 32, 5, 0x404040, false);
+    protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+        graphics.text(this.font, this.title, 32, 5, 0xFF404040, false);
         int cost = calculateTotalCost();
         int playerXP = this.minecraft != null && this.minecraft.player != null ? this.minecraft.player.experienceLevel : 0;
         boolean creative = this.minecraft != null && this.minecraft.player != null && this.minecraft.player.isCreative();
         int color;
         if (cost == 0) {
-            color = 0xAAAAAA;
+            color = 0xFFAAAAAA;
         } else if (creative) {
-            color = 0x80FF20;
+            color = 0xFF80FF20;
         } else if (playerXP >= cost) {
-            color = 0x80FF20;
+            color = 0xFF80FF20;
         } else {
-            color = 0xFF4040;
+            color = 0xFFFF4040;
         }
         Component xpText = Component.literal("XP: " + cost);
-        // Center under book icon
         int textWidth = this.font.width(xpText);
-        // Approximate center of book icon inside GUI
-        int bookCenterX = 44; // adjust slightly if needed (32–36 range)
-        // Compute centered X
+        int bookCenterX = 44;
         int x = bookCenterX - (textWidth / 2);
-        // Keep existing vertical position
         int y = 62;
-        guiGraphics.drawString(this.font, xpText, x, y, color, false);
+        graphics.text(this.font, xpText, x, y, color, false);
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(guiGraphics, mouseX, mouseY, partialTicks);
-        super.render(guiGraphics, mouseX, mouseY, partialTicks);
-        this.renderTooltip(guiGraphics, mouseX, mouseY);
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks) {
+        super.extractRenderState(graphics, mouseX, mouseY, partialTicks);
         if (!this.enchantButtonIcon.isEmpty() && this.enchantButton != null)
-            guiGraphics.renderItem(this.enchantButtonIcon, this.enchantButton.getX() + 5, this.enchantButton.getY() + 2);
+            graphics.item(this.enchantButtonIcon, this.enchantButton.getX() + 5, this.enchantButton.getY() + 2);
     }
 
     public void populateEnchantmentSliders() {
@@ -200,16 +188,16 @@ public class GuiAdvancedTable extends AbstractContainerScreen<ContainerAdvancedT
     }
 
     public void lockLabels() {
-        var reg = this.logic.getWorld().registryAccess().registryOrThrow(Registries.ENCHANTMENT);
+        Registry<Enchantment> reg = this.logic.getWorld().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
         for (GuiEnchantmentLabel label : this.enchantmentListAll) {
             label.setLocked(false);
             Enchantment enchantment = label.getEnchantment();
             for (Entry<Enchantment, Integer> data : this.logic.getCurrentEnchantments().entrySet()) {
                 boolean incompatible = false;
                 if (enchantment != data.getKey() && data.getValue() > 0) {
-                    Holder<Enchantment> h1 = reg.getHolder(reg.getResourceKey(enchantment).orElseThrow()).orElse(null);
-                    Holder<Enchantment> h2 = reg.getHolder(reg.getResourceKey(data.getKey()).orElseThrow()).orElse(null);
-                    incompatible = h1 != null && h2 != null && !Enchantment.areCompatible(h1, h2);
+                    Holder<Enchantment> h1 = reg.wrapAsHolder(enchantment);
+                    Holder<Enchantment> h2 = reg.wrapAsHolder(data.getKey());
+                    incompatible = !Enchantment.areCompatible(h1, h2);
                 }
                 boolean isOverLeveled = enchantment == data.getKey() && data.getValue() > enchantment.getMaxLevel();
                 if (isOverLeveled || incompatible) {
@@ -227,11 +215,11 @@ public class GuiAdvancedTable extends AbstractContainerScreen<ContainerAdvancedT
     }
 
     @Override
-    protected void renderBg(GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
-        RenderSystem.setShaderColor(1, 1, 1, 1);
-        guiGraphics.blit(TEXTURE, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight);
+    public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks) {
+        super.extractBackground(graphics, mouseX, mouseY, partialTicks);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight, 256, 256);
         for (GuiEnchantmentLabel label : this.enchantmentList)
-            label.draw(guiGraphics, this.font);
+            label.draw(graphics, this.font);
     }
 
     @Override
@@ -248,7 +236,6 @@ public class GuiAdvancedTable extends AbstractContainerScreen<ContainerAdvancedT
 
         this.listOffset = Mth.clamp(this.listOffset, 0, maxOffset);
 
-        // Sync slider position
         if (maxOffset > 0) {
             float percent = (float) this.listOffset / maxOffset;
             this.scrollbar.sliderY = 1 + Math.round(percent * 55f);
@@ -259,7 +246,9 @@ public class GuiAdvancedTable extends AbstractContainerScreen<ContainerAdvancedT
     }
 
     @Override
-    public boolean mouseClicked(double mx, double my, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mx = event.x();
+        double my = event.y();
         int mouseX = (int) mx;
         int mouseY = (int) my;
         this.selected = this.getLabelUnderMouse(mouseX, mouseY);
@@ -269,22 +258,24 @@ public class GuiAdvancedTable extends AbstractContainerScreen<ContainerAdvancedT
         if (this.enchantmentListAll.size() > 4 && mouseX > this.leftPos + 206 && mouseX < this.leftPos + 218
                 && mouseY > this.topPos + 16 + this.scrollbar.sliderY && mouseY < this.topPos + 31 + this.scrollbar.sliderY)
             this.isSliding = true;
-        return super.mouseClicked(mx, my, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     @Override
-    public boolean mouseReleased(double mx, double my, int button) {
+    public boolean mouseReleased(MouseButtonEvent event) {
         if (this.selected != null) {
             this.selected.setDragging(false);
             this.selected = null;
             this.lockLabels();
         }
         this.isSliding = false;
-        return super.mouseReleased(mx, my, button);
+        return super.mouseReleased(event);
     }
 
     @Override
-    public boolean mouseDragged(double mx, double my, int button, double dx, double dy) {
+    public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) {
+        double mx = event.x();
+        double my = event.y();
         if (this.selected != null) {
             int mouseX = (int) mx;
             if (mouseX < this.selected.getxPos() || mouseX > this.selected.getxPos() + this.selected.getWidth()) {
@@ -296,7 +287,7 @@ public class GuiAdvancedTable extends AbstractContainerScreen<ContainerAdvancedT
             this.selected.updateSlider(trackRelativeX);
             this.lockLabels();
         }
-        return super.mouseDragged(mx, my, button, dx, dy);
+        return super.mouseDragged(event, dx, dy);
     }
 
     private boolean isMouseOverInfoRegion(int mouseX, int mouseY) {
@@ -304,29 +295,29 @@ public class GuiAdvancedTable extends AbstractContainerScreen<ContainerAdvancedT
     }
 
     @Override
-    protected void renderTooltip(GuiGraphics guiGraphics, int x, int y) {
-        super.renderTooltip(guiGraphics, x, y);
+    protected void extractTooltip(GuiGraphicsExtractor graphics, int x, int y) {
+        super.extractTooltip(graphics, x, y);
         if (this.isMouseOverInfoRegion(x, y)) {
             List<String> info = this.getInfoBox();
             if (!info.isEmpty()) {
                 List<Component> comp = new ArrayList<>();
                 for (String s : info) comp.add(Component.literal(s));
-                guiGraphics.renderComponentTooltip(this.font, comp, x, y);
+                graphics.setComponentTooltipForNextFrame(this.font, comp, x, y);
             }
         }
 
-        if (this.enchantButton.isHovered()) {
+        if (this.enchantButton != null && this.enchantButton.isHovered()) {
             List<Component> text = new ArrayList<>();
             if (!this.canClientAfford()) text.add(Component.translatable("gui.eplus.tooltip.tooexpensive"));
             else if (this.logic.getCost() == 0) text.add(Component.translatable("gui.eplus.tooltip.nochange"));
             else text.add(Component.translatable("gui.eplus.tooltip.enchant"));
-            guiGraphics.renderComponentTooltip(this.font, text, x, y);
+            graphics.setComponentTooltipForNextFrame(this.font, text, x, y);
         }
 
-        if (hasShiftDown()) {
+        if (this.minecraft != null && this.minecraft.hasShiftDown()) {
             GuiEnchantmentLabel label = this.getLabelUnderMouse(x, y);
             if (label != null && label.isVisible())
-                guiGraphics.renderComponentTooltip(this.font, Collections.singletonList(Component.literal(label.getDescription())), x, y);
+                graphics.setComponentTooltipForNextFrame(this.font, Collections.singletonList(Component.literal(label.getDescription())), x, y);
         }
     }
 

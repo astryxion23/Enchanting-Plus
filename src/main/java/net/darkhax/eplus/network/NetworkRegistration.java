@@ -3,6 +3,7 @@ package net.darkhax.eplus.network;
 import net.darkhax.eplus.inventory.ContainerAdvancedTable;
 import net.darkhax.eplus.network.payload.EnchantPayload;
 import net.darkhax.eplus.network.payload.SliderUpdatePayload;
+import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -27,11 +28,11 @@ public final class NetworkRegistration {
 
     private static void handleSliderUpdate(SliderUpdatePayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
-            if (payload.enchantmentKey() == null) return;
+            if (payload.enchantmentId() == null) return;
             if (context.player() == null) return;
             if (!(context.player().containerMenu instanceof ContainerAdvancedTable)) return;
-            var reg = context.player().registryAccess().registryOrThrow(Registries.ENCHANTMENT);
-            Enchantment ench = reg.get(payload.enchantmentKey());
+            Registry<Enchantment> reg = context.player().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+            Enchantment ench = reg.getOptional(payload.enchantmentId()).orElse(null);
             if (ench != null)
                 ((ContainerAdvancedTable) context.player().containerMenu).logic.updateEnchantment(ench, payload.level());
         });

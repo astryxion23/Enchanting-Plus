@@ -2,11 +2,11 @@ package net.darkhax.eplus.block.tileentity;
 
 import java.awt.Color;
 
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 public class TileEntityDecoration extends TileEntityWithBook {
 
@@ -29,18 +29,18 @@ public class TileEntityDecoration extends TileEntityWithBook {
     }
 
     @Override
-    protected void saveAdditional(CompoundTag dataTag, HolderLookup.Provider registries) {
-        super.saveAdditional(dataTag, registries);
-        dataTag.putFloat("Height", this.height);
-        dataTag.putInt("Color", this.color);
-        dataTag.putInt("Variant", this.variant);
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
+        output.putFloat("Height", this.height);
+        output.putInt("Color", this.color);
+        output.putInt("Variant", this.variant);
     }
 
     @Override
-    protected void loadAdditional(CompoundTag dataTag, HolderLookup.Provider registries) {
-        super.loadAdditional(dataTag, registries);
-        this.height = dataTag.getFloat("Height");
-        this.color = dataTag.getInt("Color");
-        this.variant = dataTag.getInt("Variant");
+    protected void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        this.height = input.getFloatOr("Height", 0f);
+        this.color = input.getIntOr("Color", 0);
+        this.variant = input.getIntOr("Variant", 0);
     }
 }

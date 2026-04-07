@@ -12,6 +12,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.world.level.Level;
 import net.minecraft.core.registries.Registries;
@@ -40,22 +41,22 @@ public final class EnchLogic {
     }
 
     public static boolean isCurseEnchantment(RegistryAccess registryAccess, Enchantment enchantment) {
-        var reg = registryAccess.registryOrThrow(Registries.ENCHANTMENT);
-        Holder<Enchantment> holder = reg.getHolder(reg.getResourceKey(enchantment).orElseThrow()).orElse(null);
-        return holder != null && holder.is(EnchantmentTags.CURSE);
+        Registry<Enchantment> reg = registryAccess.lookupOrThrow(Registries.ENCHANTMENT);
+        Holder<Enchantment> holder = reg.wrapAsHolder(enchantment);
+        return holder.is(EnchantmentTags.CURSE);
     }
 
     public static boolean isTreasureOnlyEnchantment(RegistryAccess registryAccess, Enchantment enchantment) {
-        var reg = registryAccess.registryOrThrow(Registries.ENCHANTMENT);
-        Holder<Enchantment> holder = reg.getHolder(reg.getResourceKey(enchantment).orElseThrow()).orElse(null);
-        return holder != null && holder.is(EnchantmentTags.TREASURE);
+        Registry<Enchantment> reg = registryAccess.lookupOrThrow(Registries.ENCHANTMENT);
+        Holder<Enchantment> holder = reg.wrapAsHolder(enchantment);
+        return holder.is(EnchantmentTags.TREASURE);
     }
 
 
     public static List<Enchantment> getValidEnchantments(ItemStack stack, Level world, BlockPos pos) {
         List<Enchantment> enchList = new ArrayList<>();
         if (!stack.isEmpty() && (stack.isEnchantable() || stack.isEnchanted())) {
-            var reg = world.registryAccess().registryOrThrow(Registries.ENCHANTMENT);
+            Registry<Enchantment> reg = world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
             ConfigurationHandler.buildEnchantmentBlacklist(world.registryAccess());
             for (Enchantment enchantment : reg) {
                 if (Blacklist.isEnchantmentBlacklisted(enchantment) || !enchantment.canEnchant(stack))
@@ -77,7 +78,7 @@ public final class EnchLogic {
     }
 
     public static boolean isTreasuresAvailable(Enchantment enchantment, Level world, BlockPos pos, BlockPos down) {
-        if (isCurseEnchantment(world.registryAccess(), enchantment) || !isTreasureOnlyEnchantment(world.registryAccess(), enchantment) || world.isDay()) return false;
+        if (isCurseEnchantment(world.registryAccess(), enchantment) || !isTreasureOnlyEnchantment(world.registryAccess(), enchantment) || world.isBrightOutside()) return false;
         for (int x = -1; x <= 1; x++) {
             for (int z = -1; z <= 1; z++) {
                 BlockPos currentPos = down.offset(x, 0, z);
@@ -91,9 +92,10 @@ public final class EnchLogic {
     }
 
     public static boolean isWikedNight(Level world) {
-        long time = world.getDayTime() % 24000L;
+        long dayTime = world.getDefaultClockTime();
+        long time = dayTime % 24000L;
         boolean isNightRange = time >= 12000 && time <= 18000;
-        long dayIndex = world.getDayTime() / 24000L;
+        long dayIndex = dayTime / 24000L;
         int moonPhase = (int) (dayIndex % 8L);
         return moonPhase == 0 && isNightRange;
     }

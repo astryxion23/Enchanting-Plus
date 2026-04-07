@@ -7,11 +7,10 @@
     " g "
   ],
   "key": {
-    "g": { "item": "minecraft:glowstone" },
-    "b": { "item": "minecraft:book" }
+    "g": "minecraft:glowstone",
+    "b": "minecraft:book"
   },
   "result": {
-    "count": 1,
     "id": "eplus:decorative_book"
   }
 }

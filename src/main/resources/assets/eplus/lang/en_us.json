@@ -1,6 +1,8 @@
 {
   "block.eplus.advanced_table": "Advanced Enchantment Table",
   "block.eplus.decorative_book": "Ancient Enchanter's Book",
+  "item.eplus.advanced_table": "Advanced Enchantment Table",
+  "item.eplus.decorative_book": "Ancient Enchanter's Book",
   "item.eplus.table_upgrade": "Table Upgrade",
   "itemGroup.eplus": "Enchanting Plus",
   "tile.eplus.advanced.table.name": "Advanced Enchantment Table",

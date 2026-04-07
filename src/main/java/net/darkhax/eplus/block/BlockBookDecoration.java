@@ -4,6 +4,7 @@ import net.darkhax.eplus.ConfigurationHandler;
 import net.darkhax.eplus.block.tileentity.TileEntityDecoration;
 import net.darkhax.eplus.block.tileentity.TileEntityWithBook;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionResult;
@@ -14,6 +15,7 @@ import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -32,8 +34,8 @@ public class BlockBookDecoration extends Block implements EntityBlock {
 
     public static final String[] TYPES = new String[] { "eplus", "vanilla", "prismarine", "nether", "tartarite", "white", "metal" };
 
-    public BlockBookDecoration() {
-        super(Block.Properties.of().strength(1.5F).lightLevel(s -> 15).noOcclusion());
+    public BlockBookDecoration(BlockBehaviour.Properties properties) {
+        super(properties);
     }
 
     @Override
@@ -64,7 +66,7 @@ public class BlockBookDecoration extends Block implements EntityBlock {
 
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level worldIn, BlockPos pos, Player playerIn, BlockHitResult hit) {
-        if (!worldIn.isClientSide && !playerIn.getMainHandItem().isEmpty() && worldIn.getBlockEntity(pos) instanceof TileEntityDecoration) {
+        if (!worldIn.isClientSide() && !playerIn.getMainHandItem().isEmpty() && worldIn.getBlockEntity(pos) instanceof TileEntityDecoration) {
             TileEntityDecoration deco = (TileEntityDecoration) worldIn.getBlockEntity(pos);
             if (playerIn.getMainHandItem().getItem() == net.minecraft.world.item.Items.FEATHER)
                 deco.increaseHeight();
@@ -72,7 +74,9 @@ public class BlockBookDecoration extends Block implements EntityBlock {
                 deco.decreaseHeight();
             worldIn.sendBlockUpdated(pos, state, state, 8);
         }
-        return InteractionResult.sidedSuccess(worldIn.isClientSide);
+        if (!worldIn.isClientSide())
+            return InteractionResult.SUCCESS_SERVER;
+        return InteractionResult.CONSUME;
     }
 
     @Override
@@ -80,7 +84,7 @@ public class BlockBookDecoration extends Block implements EntityBlock {
         BlockEntity te = worldIn.getBlockEntity(pos);
         if (te instanceof TileEntityDecoration) {
             CustomData data = stack.get(DataComponents.CUSTOM_DATA);
-            int variant = (data != null && data.copyTag().contains("Variant")) ? data.copyTag().getInt("Variant") : 0;
+            int variant = (data != null && data.copyTag().contains("Variant")) ? data.copyTag().getIntOr("Variant", 0) : 0;
             ((TileEntityDecoration) te).variant = Math.min(Math.max(variant, 0), TYPES.length - 1);
         }
     }
@@ -109,7 +113,7 @@ public class BlockBookDecoration extends Block implements EntityBlock {
     }
 
     @Override
-    public int getAnalogOutputSignal(BlockState state, Level worldIn, BlockPos pos) {
+    protected int getAnalogOutputSignal(BlockState state, Level worldIn, BlockPos pos, Direction direction) {
         BlockEntity te = worldIn.getBlockEntity(pos);
         return te instanceof TileEntityWithBook && ((TileEntityWithBook) te).isOpen() ? 15 : 0;
     }

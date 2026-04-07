@@ -11,6 +11,7 @@ import net.darkhax.eplus.inventory.ItemStackHandlerEnchant;
 import net.darkhax.eplus.util.EnchantmentUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -97,9 +98,8 @@ public class EnchantmentLogicController {
         ItemEnchantments.Mutable mutable = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
         for (Entry<Enchantment, Integer> entry : this.itemEnchantments.entrySet()) {
             if (entry.getValue() > 0) {
-                var reg = this.world.registryAccess().registryOrThrow(Registries.ENCHANTMENT);
-                Holder<Enchantment> h = reg.getHolderOrThrow(
-                        reg.getResourceKey(entry.getKey()).orElseThrow());
+                Registry<Enchantment> reg = this.world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+                Holder<Enchantment> h = reg.wrapAsHolder(entry.getKey());
                 mutable.set(h, entry.getValue());
             }
         }
@@ -108,11 +108,8 @@ public class EnchantmentLogicController {
     }
 
     private boolean isCurse(Enchantment enchantment) {
-        var reg = this.world.registryAccess().registryOrThrow(Registries.ENCHANTMENT);
-        return reg.getResourceKey(enchantment)
-                .flatMap(reg::getHolder)
-                .filter(h -> h.is(net.minecraft.tags.EnchantmentTags.CURSE))
-                .isPresent();
+        Registry<Enchantment> reg = this.world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+        return reg.wrapAsHolder(enchantment).is(net.minecraft.tags.EnchantmentTags.CURSE);
     }
 
     public int getCost() { return this.cost; }

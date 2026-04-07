@@ -1,14 +1,21 @@
 package net.darkhax.eplus.block;
 
-import net.minecraft.world.level.block.Block;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.neoforged.neoforge.registries.DeferredHolder;
+import net.minecraft.world.level.material.MapColor;
+import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
 public class ModBlocks {
 
-    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(BuiltInRegistries.BLOCK, "eplus");
+    public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks("eplus");
 
-    public static final DeferredHolder<Block, Block> ADVANCED_TABLE = BLOCKS.register("advanced_table", BlockAdvancedTable::new);
-    public static final DeferredHolder<Block, Block> DECORATIVE_BOOK = BLOCKS.register("decorative_book", BlockBookDecoration::new);
+    public static final DeferredBlock<BlockAdvancedTable> ADVANCED_TABLE =
+            BLOCKS.registerBlock("advanced_table", BlockAdvancedTable::new,
+                    p -> p.mapColor(MapColor.COLOR_PURPLE)
+                            .requiresCorrectToolForDrops()
+                            .strength(5.0F, 2000.0F)
+                            .noOcclusion());
+
+    public static final DeferredBlock<BlockBookDecoration> DECORATIVE_BOOK =
+            BLOCKS.registerBlock("decorative_book", BlockBookDecoration::new,
+                    p -> p.strength(1.5F).lightLevel(s -> 15).noOcclusion());
 }

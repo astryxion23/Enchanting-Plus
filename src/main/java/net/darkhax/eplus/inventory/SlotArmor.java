@@ -1,10 +1,11 @@
 package net.darkhax.eplus.inventory;
 
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.equipment.Equippable;
 
 public class SlotArmor extends Slot {
 
@@ -18,6 +19,7 @@ public class SlotArmor extends Slot {
     @Override
     public boolean mayPlace(ItemStack stack) {
         if (stack.isEmpty()) return false;
-        return stack.getItem() instanceof ArmorItem && ((ArmorItem) stack.getItem()).getEquipmentSlot() == slotType;
+        Equippable equippable = stack.get(DataComponents.EQUIPPABLE);
+        return equippable != null && equippable.slot() == this.slotType;
     }
 }

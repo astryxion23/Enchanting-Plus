@@ -7,13 +7,12 @@
     "geg"
   ],
   "key": {
-    "b": { "item": "minecraft:book" },
-    "o": { "item": "minecraft:obsidian" },
-    "e": { "item": "minecraft:ender_eye" },
-    "g": { "tag": "c:ingots/gold" }
+    "b": "minecraft:book",
+    "o": "minecraft:obsidian",
+    "e": "minecraft:ender_eye",
+    "g": "#c:ingots/gold"
   },
   "result": {
-    "count": 1,
     "id": "eplus:table_upgrade"
   }
 }

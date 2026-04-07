@@ -25,7 +25,7 @@ public class ItemTableUpgrade extends Item {
             if (!context.getPlayer().isCreative())
                 context.getItemInHand().shrink(1);
 
-            return InteractionResult.sidedSuccess(worldIn.isClientSide());
+            return worldIn.isClientSide() ? InteractionResult.CONSUME : InteractionResult.SUCCESS_SERVER;
         }
         return InteractionResult.PASS;
     }
