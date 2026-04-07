@@ -5,36 +5,33 @@ import net.darkhax.eplus.network.payload.EnchantPayload;
 import net.darkhax.eplus.network.payload.SliderUpdatePayload;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.enchantment.Enchantment;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
+
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 
 public final class NetworkRegistration {
 
-    @SubscribeEvent
-    public static void register(final RegisterPayloadHandlersEvent event) {
-        var registrar = event.registrar("1");
-        registrar.playToServer(EnchantPayload.TYPE, EnchantPayload.STREAM_CODEC, NetworkRegistration::handleEnchant);
-        registrar.playToServer(SliderUpdatePayload.TYPE, SliderUpdatePayload.STREAM_CODEC, NetworkRegistration::handleSliderUpdate);
+    public static void register() {
+        PayloadTypeRegistry.serverboundPlay().register(EnchantPayload.TYPE, EnchantPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(SliderUpdatePayload.TYPE, SliderUpdatePayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(EnchantPayload.TYPE, NetworkRegistration::handleEnchant);
+        ServerPlayNetworking.registerGlobalReceiver(SliderUpdatePayload.TYPE, NetworkRegistration::handleSliderUpdate);
     }
 
-    private static void handleEnchant(EnchantPayload payload, IPayloadContext context) {
-        context.enqueueWork(() -> {
-            if (context.player() != null && context.player().containerMenu instanceof ContainerAdvancedTable)
-                ((ContainerAdvancedTable) context.player().containerMenu).logic.enchantItem();
-        });
+    private static void handleEnchant(EnchantPayload payload, ServerPlayNetworking.Context context) {
+        if (context.player().containerMenu instanceof ContainerAdvancedTable)
+            ((ContainerAdvancedTable) context.player().containerMenu).logic.enchantItem();
     }
 
-    private static void handleSliderUpdate(SliderUpdatePayload payload, IPayloadContext context) {
-        context.enqueueWork(() -> {
-            if (payload.enchantmentId() == null) return;
-            if (context.player() == null) return;
-            if (!(context.player().containerMenu instanceof ContainerAdvancedTable)) return;
-            Registry<Enchantment> reg = context.player().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
-            Enchantment ench = reg.getOptional(payload.enchantmentId()).orElse(null);
-            if (ench != null)
-                ((ContainerAdvancedTable) context.player().containerMenu).logic.updateEnchantment(ench, payload.level());
-        });
+    private static void handleSliderUpdate(SliderUpdatePayload payload, ServerPlayNetworking.Context context) {
+        if (payload.enchantmentId() == null) return;
+        if (!(context.player().containerMenu instanceof ContainerAdvancedTable)) return;
+        Registry<Enchantment> reg = context.player().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+        ResourceKey<Enchantment> key = ResourceKey.create(Registries.ENCHANTMENT, payload.enchantmentId());
+        Enchantment ench = reg.getOptional(key).orElse(null);
+        if (ench != null)
+            ((ContainerAdvancedTable) context.player().containerMenu).logic.updateEnchantment(ench, payload.level());
     }
 }

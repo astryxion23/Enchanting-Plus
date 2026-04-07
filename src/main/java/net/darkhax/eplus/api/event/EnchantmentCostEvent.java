@@ -1,9 +1,8 @@
 package net.darkhax.eplus.api.event;
 
 import net.minecraft.world.item.enchantment.Enchantment;
-import net.neoforged.bus.api.Event;
 
-public class EnchantmentCostEvent extends Event {
+public class EnchantmentCostEvent {
 
     private final Enchantment enchantment;
     private final int level;

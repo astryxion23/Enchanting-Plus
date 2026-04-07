@@ -20,7 +20,7 @@ public class ItemTableUpgrade extends Item {
         BlockPos pos = context.getClickedPos();
 
         if (worldIn.getBlockState(pos).getBlock() == Blocks.ENCHANTING_TABLE) {
-            worldIn.setBlock(pos, EnchantingPlus.blockAdvancedTable.get().defaultBlockState(), 3);
+            worldIn.setBlock(pos, EnchantingPlus.blockAdvancedTable.defaultBlockState(), 3);
 
             if (!context.getPlayer().isCreative())
                 context.getItemInHand().shrink(1);

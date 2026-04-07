@@ -5,22 +5,45 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
+import net.darkhax.eplus.inventory.ContainerAdvancedTable;
 import net.darkhax.eplus.inventory.ItemStackHandlerEnchant;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.UUIDUtil;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 
-public class TileEntityAdvancedTable extends TileEntityWithBook {
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
+
+public class TileEntityAdvancedTable extends TileEntityWithBook implements ExtendedMenuProvider<BlockPos> {
 
     private final Map<UUID, ItemStackHandlerEnchant> inventories = new HashMap<>();
 
     public TileEntityAdvancedTable(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
+    }
+
+    @Override
+    public Component getDisplayName() {
+        return Component.translatable("tile.eplus.advanced.table.name");
+    }
+
+    @Override
+    public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
+        EnchantmentLogicController logic = new EnchantmentLogicController(player, getLevel(), worldPosition, getInventory(player));
+        return new ContainerAdvancedTable(id, inv, logic);
+    }
+
+    @Override
+    public BlockPos getScreenOpeningData(ServerPlayer player) {
+        return worldPosition;
     }
 
     public ItemStackHandlerEnchant getInventory(Player player) {
@@ -38,7 +61,7 @@ public class TileEntityAdvancedTable extends TileEntityWithBook {
      */
     public ItemStack getDisplayStack() {
         for (ItemStackHandlerEnchant inv : this.inventories.values()) {
-            ItemStack stack = inv.getStackInSlot(0);
+            ItemStack stack = inv.getItem(0);
             if (!stack.isEmpty()) return stack;
         }
         return ItemStack.EMPTY;

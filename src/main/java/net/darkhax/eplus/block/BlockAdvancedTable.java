@@ -5,7 +5,6 @@ import java.util.UUID;
 
 import net.darkhax.eplus.block.tileentity.TileEntityAdvancedTable;
 import net.darkhax.eplus.inventory.ItemStackHandlerEnchant;
-import net.darkhax.eplus.network.GuiHandler;
 import net.darkhax.eplus.util.StackUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -26,7 +25,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 public class BlockAdvancedTable extends Block implements EntityBlock {
 
@@ -39,20 +38,20 @@ public class BlockAdvancedTable extends Block implements EntityBlock {
     @Override
     @Nullable
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-        return new TileEntityAdvancedTable(ModTileEntities.ADVANCED_TABLE.get(), pos, state);
+        return new TileEntityAdvancedTable(ModTileEntities.ADVANCED_TABLE, pos, state);
     }
 
     @Override
     @Nullable
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
-        return type == ModTileEntities.ADVANCED_TABLE.get() ? (lvl, pos, st, be) -> net.darkhax.eplus.block.tileentity.TileEntityWithBook.tick(lvl, pos, st, (net.darkhax.eplus.block.tileentity.TileEntityWithBook) be) : null;
+        return type == ModTileEntities.ADVANCED_TABLE ? (lvl, pos, st, be) -> net.darkhax.eplus.block.tileentity.TileEntityWithBook.tick(lvl, pos, st, (net.darkhax.eplus.block.tileentity.TileEntityWithBook) be) : null;
     }
 
     private static void spillAdvancedTableContents(Level level, BlockPos pos, TileEntityAdvancedTable table) {
         Map<UUID, ItemStackHandlerEnchant> inventories = table.getInveotries();
         for (ItemStackHandlerEnchant inv : inventories.values()) {
             StackUtils.dropStackInWorld(level, pos, inv.getEnchantingStack());
-            inv.setStackInSlot(0, ItemStack.EMPTY);
+            inv.setItem(0, ItemStack.EMPTY);
         }
         inventories.clear();
     }
@@ -85,7 +84,7 @@ public class BlockAdvancedTable extends Block implements EntityBlock {
         if (!worldIn.isClientSide()) {
             BlockEntity te = worldIn.getBlockEntity(pos);
             if (te instanceof TileEntityAdvancedTable)
-                ((ServerPlayer) playerIn).openMenu(new GuiHandler.AdvancedTableContainerProvider((TileEntityAdvancedTable) te, pos), buf -> buf.writeBlockPos(pos));
+                ((ServerPlayer) playerIn).openMenu((TileEntityAdvancedTable) te);
             return InteractionResult.SUCCESS_SERVER;
         }
         return InteractionResult.CONSUME;

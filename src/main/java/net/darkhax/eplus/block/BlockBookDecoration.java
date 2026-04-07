@@ -24,7 +24,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import java.util.Collections;
 import java.util.List;
 
@@ -41,13 +41,13 @@ public class BlockBookDecoration extends Block implements EntityBlock {
     @Override
     @Nullable
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-        return new TileEntityDecoration(ModTileEntities.DECORATION.get(), pos, state);
+        return new TileEntityDecoration(ModTileEntities.DECORATION, pos, state);
     }
 
     @Override
     @Nullable
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
-        return type == ModTileEntities.DECORATION.get() ? (lvl, pos, st, be) -> TileEntityWithBook.tick(lvl, pos, st, (TileEntityWithBook) be) : null;
+        return type == ModTileEntities.DECORATION ? (lvl, pos, st, be) -> TileEntityWithBook.tick(lvl, pos, st, (TileEntityWithBook) be) : null;
     }
 
     @Override

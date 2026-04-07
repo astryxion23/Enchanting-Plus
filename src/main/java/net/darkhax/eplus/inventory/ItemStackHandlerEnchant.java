@@ -1,11 +1,13 @@
 package net.darkhax.eplus.inventory;
 
 import net.darkhax.eplus.EnchantingPlus;
+import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.neoforged.neoforge.items.ItemStackHandler;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
-public class ItemStackHandlerEnchant extends ItemStackHandler {
+public class ItemStackHandlerEnchant extends SimpleContainer {
 
     protected BlockEntity tableTile;
 
@@ -15,22 +17,31 @@ public class ItemStackHandlerEnchant extends ItemStackHandler {
     }
 
     public ItemStack getEnchantingStack() {
-        return this.getStackInSlot(0);
+        return this.getItem(0);
     }
 
     @Override
-    public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-        if (!EnchantingPlus.TEST_ENCHANTABILITY.test(stack)) return stack;
-        return super.insertItem(slot, stack, simulate);
+    public boolean canPlaceItem(int slot, ItemStack stack) {
+        if (slot != 0) return false;
+        return EnchantingPlus.TEST_ENCHANTABILITY.test(stack);
     }
 
     @Override
-    public int getSlotLimit(int slot) {
+    public int getMaxStackSize() {
         return 1;
     }
 
     @Override
-    protected void onContentsChanged(int slot) {
+    public void setChanged() {
+        super.setChanged();
         if (tableTile != null) tableTile.setChanged();
+    }
+
+    public void serialize(ValueOutput output) {
+        output.store("Stack", ItemStack.CODEC, getItem(0));
+    }
+
+    public void deserialize(ValueInput input) {
+        setItem(0, input.read("Stack", ItemStack.CODEC).orElse(ItemStack.EMPTY));
     }
 }

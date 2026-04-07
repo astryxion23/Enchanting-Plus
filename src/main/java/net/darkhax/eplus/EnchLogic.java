@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.darkhax.eplus.api.Blacklist;
+import net.darkhax.eplus.util.EnchantmentUtils;
 import net.darkhax.eplus.api.event.EnchantmentCostEvent;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -17,7 +18,6 @@ import net.minecraft.core.RegistryAccess;
 import net.minecraft.world.level.Level;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.tags.EnchantmentTags;
-import net.neoforged.neoforge.common.NeoForge;
 
 public final class EnchLogic {
 
@@ -36,7 +36,7 @@ public final class EnchLogic {
             else if (isTreasureOnlyEnchantment(registryAccess, enchantment)) cost *= ConfigurationHandler.treasureFactor;
         }
         EnchantmentCostEvent event = new EnchantmentCostEvent(cost, enchantment, level);
-        NeoForge.EVENT_BUS.post(event);
+        EPlusEvents.ENCHANTMENT_COST.invoker().onEnchantmentCost(event);
         return event.getCost();
     }
 
@@ -84,7 +84,7 @@ public final class EnchLogic {
                 BlockPos currentPos = down.offset(x, 0, z);
                 Block block = world.getBlockState(currentPos).getBlock();
                 BlockState stateAt = world.getBlockState(currentPos);
-                if (stateAt.getEnchantPowerBonus(world, currentPos) <= 0)
+                if (EnchantmentUtils.getEnchantPowerBonus(stateAt, world, currentPos) <= 0)
                     return false;
             }
         }

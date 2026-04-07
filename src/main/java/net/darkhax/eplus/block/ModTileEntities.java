@@ -2,23 +2,35 @@ package net.darkhax.eplus.block;
 
 import net.darkhax.eplus.block.tileentity.TileEntityAdvancedTable;
 import net.darkhax.eplus.block.tileentity.TileEntityDecoration;
-import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.neoforged.neoforge.registries.DeferredRegister;
-import net.neoforged.neoforge.registries.DeferredHolder;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+
+import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 
 public class ModTileEntities {
 
-    public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(BuiltInRegistries.BLOCK_ENTITY_TYPE, "eplus");
+    public static final BlockEntityType<TileEntityAdvancedTable> ADVANCED_TABLE = registerAdvancedTable();
+    public static final BlockEntityType<TileEntityDecoration> DECORATION = registerDecoration();
 
-    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityAdvancedTable>> ADVANCED_TABLE = BLOCK_ENTITIES.register("advanced_table", () -> {
+    private static BlockEntityType<TileEntityAdvancedTable> registerAdvancedTable() {
         final BlockEntityType<TileEntityAdvancedTable>[] ref = new BlockEntityType[1];
-        ref[0] = new BlockEntityType<>((pos, state) -> new TileEntityAdvancedTable(ref[0], pos, state), ModBlocks.ADVANCED_TABLE.get());
-        return ref[0];
-    });
-    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityDecoration>> DECORATION = BLOCK_ENTITIES.register("decorative_book", () -> {
+        BlockEntityType<TileEntityAdvancedTable> type = FabricBlockEntityTypeBuilder.create(
+                (pos, state) -> new TileEntityAdvancedTable(ref[0], pos, state),
+                ModBlocks.ADVANCED_TABLE
+        ).build();
+        ref[0] = type;
+        return Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, Identifier.fromNamespaceAndPath("eplus", "advanced_table"), type);
+    }
+
+    private static BlockEntityType<TileEntityDecoration> registerDecoration() {
         final BlockEntityType<TileEntityDecoration>[] ref = new BlockEntityType[1];
-        ref[0] = new BlockEntityType<>((pos, state) -> new TileEntityDecoration(ref[0], pos, state), ModBlocks.DECORATIVE_BOOK.get());
-        return ref[0];
-    });
+        BlockEntityType<TileEntityDecoration> type = FabricBlockEntityTypeBuilder.create(
+                (pos, state) -> new TileEntityDecoration(ref[0], pos, state),
+                ModBlocks.DECORATIVE_BOOK
+        ).build();
+        ref[0] = type;
+        return Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, Identifier.fromNamespaceAndPath("eplus", "decorative_book"), type);
+    }
 }

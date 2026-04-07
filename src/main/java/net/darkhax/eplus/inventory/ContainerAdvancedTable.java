@@ -11,15 +11,13 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.items.SlotItemHandler;
-
 public class ContainerAdvancedTable extends AbstractContainerMenu {
 
     public final EnchantmentLogicController logic;
     private final Inventory playerInv;
 
     public ContainerAdvancedTable(int id, Inventory invPlayer, EnchantmentLogicController logic) {
-        super(ModContainers.ADVANCED_TABLE.get(), id);
+        super(ModContainers.ADVANCED_TABLE, id);
         this.logic = logic;
         this.playerInv = invPlayer;
 
