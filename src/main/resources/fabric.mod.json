@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "eplusfabric",
+  "version": "${version}",
+  "name": "Enchanting Plus",
+  "description": "Provides a less random enchanting system.",
+  "authors": ["Astryxion"],
+  "credits": "Darkhax",
+  "license": "All Rights Reserved",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["net.darkhax.eplus.EnchantingPlus"],
+    "client": ["net.darkhax.eplus.client.EPlusClient"]
+  },
+  "mixins": [],
+  "client": ["eplus.client.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.18.0",
+    "minecraft": ">=26.1",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}
