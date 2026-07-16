@@ -65,8 +65,9 @@ public class EnchantmentLogicController {
                     this.cost += EnchLogic.calculateNewEnchCost(existingEnch.getKey(), existingEnch.getValue() - currentCurseLevel);
             }
         }
-        if (this.enchantmentPower > 0)
-            this.cost -= this.getCost() * this.enchantmentPower / 100f;
+        if (this.enchantmentPower > 0) {
+            this.cost = (int) Math.max(0, this.cost - this.cost * this.enchantmentPower / 100f);
+        }
     }
 
     public int getCurrentLevel(Enchantment enchant) {
@@ -85,9 +86,9 @@ public class EnchantmentLogicController {
     public Map<Enchantment, Integer> getCurrentEnchantments() { return this.itemEnchantments; }
 
     public void enchantItem() {
-        if (!this.player.isCreative() && EnchLogic.getExperience(this.player) < this.getCost()) return;
+        if (!this.player.isCreative() && this.player.experienceLevel < this.getCost()) return;
         if (!this.player.isCreative() && this.cost > 0)
-            EnchLogic.removeExperience(this.player, this.getCost());
+            this.player.giveExperienceLevels(-this.getCost());
         EnchantmentHelper.setEnchantments(new HashMap<>(), this.inputStack);
         for (Entry<Enchantment, Integer> entry : this.itemEnchantments.entrySet()) {
             if (entry.getValue() > 0)

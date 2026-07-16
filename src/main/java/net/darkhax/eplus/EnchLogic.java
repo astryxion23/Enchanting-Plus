@@ -17,18 +17,16 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 public final class EnchLogic {
 
-    public static int calculateNewEnchCost(Enchantment enchantment, int level) {
-        int cost = ConfigurationHandler.baseCost;
-        Enchantment.Rarity rarity = enchantment.getRarity();
-        int weight = rarity != null ? rarity.getWeight() : 10;
-        cost *= Math.max(11 - weight, 1);
-        cost *= level;
-        cost *= ConfigurationHandler.costFactor;
-        if (enchantment.isCurse()) {
-            cost *= ConfigurationHandler.curseFactor;
-        } else if (enchantment.isTreasureOnly()) {
-            cost *= ConfigurationHandler.treasureFactor;
+    public static int calculateLevelCost(Enchantment enchantment, int levels) {
+        if (levels <= 0) return 0;
+        if (enchantment.isTreasureOnly()) {
+            return 4;
         }
+        return Math.max(1, Math.min(levels, 5));
+    }
+
+    public static int calculateNewEnchCost(Enchantment enchantment, int level) {
+        int cost = calculateLevelCost(enchantment, level);
         EnchantmentCostEvent event = new EnchantmentCostEvent(cost, enchantment, level);
         MinecraftForge.EVENT_BUS.post(event);
         return event.getCost();

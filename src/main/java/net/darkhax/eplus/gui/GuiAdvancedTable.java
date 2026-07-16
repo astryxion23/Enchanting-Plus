@@ -7,8 +7,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
-
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.darkhax.eplus.EnchLogic;
@@ -54,7 +52,6 @@ public class GuiAdvancedTable extends AbstractContainerScreen<ContainerAdvancedT
     private final String[] tips = { "description", "books", "treasure", "curse", "storage", "inventory", "armor" };
     private final int currentTip;
     private final EnchantmentLogicController logic;
-    private int totalCost = 0;
 
     public GuiAdvancedTable(ContainerAdvancedTable container, Inventory inv, Component title) {
         super(container, inv, title);
@@ -85,38 +82,11 @@ public class GuiAdvancedTable extends AbstractContainerScreen<ContainerAdvancedT
         this.addRenderableWidget(this.scrollbar);
     }
 
-    /** Linear 1–5 XP cost; treasure enchantments always 4. */
-    public static int xpCost(Enchantment ench, int level) {
-        if (ench.isTreasureOnly()) {
-            return 4;
-        }
-        return Math.max(1, Math.min(level, 5));
-    }
-
-    public int calculateTotalCost() {
-        int total = 0;
-        ItemStack stack = this.menu.getSlot(0).getItem();
-        Map<Enchantment, Integer> existing = EnchantmentHelper.getEnchantments(stack);
-
-        for (Entry<Enchantment, Integer> e : this.logic.getCurrentEnchantments().entrySet()) {
-            Enchantment enchant = e.getKey();
-            int selectedLevel = e.getValue();
-            int existingLevel = existing.getOrDefault(enchant, 0);
-
-            if (selectedLevel > existingLevel) {
-                int levelDifference = selectedLevel - existingLevel;
-                total += xpCost(enchant, levelDifference);
-            }
-        }
-        return Math.max(0, total);
-    }
-
     @Override
     public void containerTick() {
         super.containerTick();
-        this.totalCost = calculateTotalCost();
         if (this.enchantButton != null && this.minecraft != null && this.minecraft.player != null)
-            this.enchantButton.active = this.minecraft.player.isCreative() || this.minecraft.player.experienceLevel >= this.totalCost;
+            this.enchantButton.active = this.minecraft.player.isCreative() || this.minecraft.player.experienceLevel >= this.logic.getCost();
         this.updateLabels();
         this.populateEnchantmentSliders();
     }
@@ -124,7 +94,7 @@ public class GuiAdvancedTable extends AbstractContainerScreen<ContainerAdvancedT
     @Override
     protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         guiGraphics.drawString(this.font, this.title, 32, 5, 0x404040, false);
-        int cost = calculateTotalCost();
+        int cost = this.logic.getCost();
         int playerXP = this.minecraft != null && this.minecraft.player != null ? this.minecraft.player.experienceLevel : 0;
         boolean creative = this.minecraft != null && this.minecraft.player != null && this.minecraft.player.isCreative();
         int color;
@@ -312,12 +282,12 @@ public class GuiAdvancedTable extends AbstractContainerScreen<ContainerAdvancedT
             info.add(I18n.get("gui.eplus.info.noench"));
         else {
             boolean isCreative = minecraft.player != null && minecraft.player.isCreative();
-            int playerXP = isCreative ? Integer.MAX_VALUE : EnchLogic.getExperience(this.logic.getPlayer());
+            int playerLevels = isCreative ? Integer.MAX_VALUE : this.logic.getPlayer().experienceLevel;
             int cost = this.logic.getCost();
-            info.add(isCreative ? I18n.get("eplus.info.infinity") : I18n.get("eplus.info.playerxp", playerXP));
+            info.add(isCreative ? I18n.get("eplus.info.infinity") : I18n.get("eplus.info.playerxp", playerLevels));
             info.add(I18n.get("eplus.info.costxp", cost));
             info.add(I18n.get("eplus.info.power", this.logic.getEnchantmentPower()) + "%");
-            if (cost > playerXP) {
+            if (cost > playerLevels) {
                 info.add(" ");
                 info.add(ChatFormatting.RED + I18n.get("gui.eplus.info.tooexpensive"));
             }
@@ -330,6 +300,7 @@ public class GuiAdvancedTable extends AbstractContainerScreen<ContainerAdvancedT
     }
 
     public boolean canClientAfford() {
-        return this.logic.getCost() <= EnchLogic.getExperience(this.logic.getPlayer()) || (minecraft.player != null && minecraft.player.isCreative());
+        return (minecraft.player != null && minecraft.player.isCreative())
+                || this.logic.getCost() <= this.logic.getPlayer().experienceLevel;
     }
 }

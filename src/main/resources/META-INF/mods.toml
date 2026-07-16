@@ -4,7 +4,7 @@ license="All Rights Reserved"
 
 [[mods]]
 modId="eplus"
-version="1.0.0"
+version="1.3.0"
 displayName="Enchanting Plus"
 description="Provides a less random enchanting system."
 authors="Astryxion"

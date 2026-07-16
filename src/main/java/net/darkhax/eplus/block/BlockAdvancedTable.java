@@ -1,5 +1,7 @@
 package net.darkhax.eplus.block;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -19,6 +21,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -31,7 +34,7 @@ public class BlockAdvancedTable extends Block implements EntityBlock {
     private static final VoxelShape BOUNDS = Block.box(0, 0, 0, 16, 12, 16);
 
     public BlockAdvancedTable() {
-        super(Block.Properties.of().mapColor(net.minecraft.world.level.material.MapColor.COLOR_PURPLE).strength(5.0F, 2000.0F).noOcclusion());
+        super(Block.Properties.of().mapColor(net.minecraft.world.level.material.MapColor.COLOR_PURPLE).strength(5.0F, 1200.0F).noOcclusion());
     }
 
     @Override
@@ -44,6 +47,11 @@ public class BlockAdvancedTable extends Block implements EntityBlock {
     @Nullable
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
         return type == ModTileEntities.ADVANCED_TABLE.get() ? (lvl, pos, st, be) -> net.darkhax.eplus.block.tileentity.TileEntityWithBook.tick(lvl, pos, st, (net.darkhax.eplus.block.tileentity.TileEntityWithBook) be) : null;
+    }
+
+    @Override
+    public List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
+        return Collections.singletonList(new ItemStack(this));
     }
 
     @Override
